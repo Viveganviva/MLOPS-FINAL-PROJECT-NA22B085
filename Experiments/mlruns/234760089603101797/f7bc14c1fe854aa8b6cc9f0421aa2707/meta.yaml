@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Viva files/Sem 8/MLOPS/Final Project/Experiments/mlruns/234760089603101797/f7bc14c1fe854aa8b6cc9f0421aa2707/artifacts
+end_time: 1777319894033
+entry_point_name: ''
+experiment_id: '234760089603101797'
+lifecycle_stage: active
+run_id: f7bc14c1fe854aa8b6cc9f0421aa2707
+run_name: HMM_unsupervised
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777319893744
+status: 3
+tags: []
+user_id: vvads

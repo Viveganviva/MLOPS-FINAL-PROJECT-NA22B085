@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Viva files/Sem 8/MLOPS/Final Project/Experiments/mlruns/234760089603101797/a0eb64983162481392e97815f89f45ae/artifacts
+end_time: 1777317764277
+entry_point_name: ''
+experiment_id: '234760089603101797'
+lifecycle_stage: active
+run_id: a0eb64983162481392e97815f89f45ae
+run_name: Logistic_Regression
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777317764063
+status: 3
+tags: []
+user_id: vvads

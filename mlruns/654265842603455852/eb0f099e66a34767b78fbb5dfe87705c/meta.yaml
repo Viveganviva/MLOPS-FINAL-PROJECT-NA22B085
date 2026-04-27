@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Viva files/Sem 8/MLOPS/Final Project/mlruns/654265842603455852/eb0f099e66a34767b78fbb5dfe87705c/artifacts
+end_time: 1777314973710
+entry_point_name: ''
+experiment_id: '654265842603455852'
+lifecycle_stage: active
+run_id: eb0f099e66a34767b78fbb5dfe87705c
+run_name: bull_bear_summary
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777314973215
+status: 3
+tags: []
+user_id: vvads

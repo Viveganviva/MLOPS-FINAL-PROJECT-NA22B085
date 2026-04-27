@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Viva files/Sem 8/MLOPS/Final Project/Experiments/mlruns/234760089603101797/ef0ba25a511e48a9bd2dcf2858c984e9/artifacts
+end_time: 1777319893728
+entry_point_name: ''
+experiment_id: '234760089603101797'
+lifecycle_stage: active
+run_id: ef0ba25a511e48a9bd2dcf2858c984e9
+run_name: XGBoost
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777319893443
+status: 3
+tags: []
+user_id: vvads

@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Viva files/Sem 8/MLOPS/Final Project/Experiments/mlruns/234760089603101797/a757c83cad2d4faf958b56698383836b/artifacts
+end_time: 1777320443820
+entry_point_name: ''
+experiment_id: '234760089603101797'
+lifecycle_stage: active
+run_id: a757c83cad2d4faf958b56698383836b
+run_name: Random_Forest
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777320443508
+status: 3
+tags: []
+user_id: vvads
