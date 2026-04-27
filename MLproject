@@ -1,0 +1,18 @@
+name: market-regime-detection
+
+conda_env: conda.yaml
+
+entry_points:
+  ingest:
+    command: "python src/data_ingestion.py"
+  featurize:
+    command: "python src/feature_engineering.py"
+  train:
+    parameters:
+      n_estimators: {type: int, default: 200}
+      max_depth: {type: int, default: 6}
+    command: "python src/train.py --n-estimators {n_estimators} --max-depth {max_depth}"
+  simulate:
+    parameters:
+      speed: {type: float, default: 2.0}
+    command: "python src/simulate_live.py --speed {speed}"

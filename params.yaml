@@ -1,0 +1,77 @@
+data:
+  train_tickers: ['SPY', 'QQQ', 'IWM', 'GLD', 'TLT']
+  primary_ticker: 'SPY'
+  vix_ticker: '^VIX'
+  train_start: '2010-01-01'
+  train_end: '2022-12-31'
+  sim_start: '2023-01-01'
+  sim_end: '2024-12-31'
+  raw_dir: 'data/raw'
+  processed_dir: 'data/processed'
+  baseline_dir: 'data/baselines'
+  sim_dir: 'data/simulation'
+
+features:
+  short_window: 5
+  mid_window: 20
+  long_window: 50
+  rsi_period: 14
+  atr_period: 14
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  hurst_window: 60
+  vr_window: 60
+  vr_k: 5
+  autocorr_window: 30
+  garch_p: 1
+  garch_q: 1
+
+training:
+  val_split_date: '2021-01-01'
+  test_split_date: '2023-01-01'
+  random_state: 42
+  trend_model:
+    n_estimators: 200
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    min_child_weight: 10
+  vol_model:
+    n_estimators: 200
+    max_depth: 4
+    learning_rate: 0.05
+    subsample: 0.8
+  bull_bear_model:
+    n_estimators: 300
+    max_depth: 5
+    learning_rate: 0.03
+    subsample: 0.8
+
+monitoring:
+  drift_threshold: 0.15
+  drift_window: 50
+  min_predictions_before_retrain: 100
+  retrain_cooldown_days: 7
+  error_rate_alert_threshold: 0.05
+  latency_alert_ms: 200
+
+mlflow:
+  tracking_uri: 'http://localhost:5000'
+  experiment_trend: 'Trend_vs_MeanRevert'
+  experiment_vol: 'Volatility_Regime'
+  experiment_bull_bear: 'Bull_Bear_Regime'
+  model_names:
+    trend: 'TrendRegimeModel'
+    vol: 'VolatilityRegimeModel'
+    bull_bear: 'BullBearRegimeModel'
+
+api:
+  host: '0.0.0.0'
+  port: 8000
+  metrics_port: 8001
+
+simulation:
+  default_speed_seconds: 2
+  drift_check_every_n: 20
+  retrain_drift_threshold: 0.15

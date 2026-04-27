@@ -1,8 +1,0 @@
-artifact_location: file:///c:/Viva files/Sem 8/MLOPS/Final Project/mlruns/131220208676170097
-creation_time: 1777313995464
-experiment_id: '131220208676170097'
-last_update_time: 1777313995464
-lifecycle_stage: active
-name: Trend_vs_MeanRevert_Experiment
-trace_location: null
-workspace: default

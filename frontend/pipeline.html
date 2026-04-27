@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pipeline View</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: #eaf1fb;
+      background: linear-gradient(180deg, #0b1524 0%, #050a13 100%);
+      padding: 32px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      min-height: 160px;
+    }
+
+    .card h2 { margin-top: 0; }
+    .card p { color: #93a4bb; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <h1>Pipeline View</h1>
+  <div class="grid">
+    <section class="card"><h2>Ingest</h2><p>Historical prices and benchmarks are staged from raw market feeds.</p></section>
+    <section class="card"><h2>Engineer</h2><p>Trend, volatility, and structural features are derived on standardized windows.</p></section>
+    <section class="card"><h2>Train</h2><p>Separate models are fit for the trend, volatility, and bull-bear regimes.</p></section>
+    <section class="card"><h2>Serve</h2><p>Live inference is exposed through the API and tracked in the simulation log.</p></section>
+  </div>
+</body>
+</html>
