@@ -30,6 +30,7 @@ from api.schemas import (
     SingleRegimeResult,
 )
 from src import data_ingestion, drift_monitor, monitoring, predict, retraining_manager
+from src.monitoring import alert_manager
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -373,6 +374,9 @@ async def drift_endpoint(regime_type: str) -> DriftResponse:
         monitoring.record_drift(regime_type, drift_reports)
         retrain_recommended, retrain_reason = drift_monitor.should_retrain(regime_type)
         any_drift_detected = any(item["drift_detected"] for item in drift_reports)
+        if any_drift_detected:
+            n_drifting = sum(1 for d in drift_reports if d["drift_detected"])
+            alert_manager.drift_alert(regime_type, n_drifting, len(drift_reports))
         logger.info("[API] drift check for %s -> %s", regime_type, retrain_reason)
         return DriftResponse(
             regime_type=regime_type,

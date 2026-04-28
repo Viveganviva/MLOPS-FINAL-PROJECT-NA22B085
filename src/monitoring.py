@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
+import smtplib
+from email.mime.text import MIMEText
 
 import psutil
 
@@ -121,6 +124,60 @@ MODELS_LOADED = Gauge(
     "regime_models_loaded_count",
     "Number of regime models currently loaded and ready",
 )
+
+
+class AlertManager:
+    """
+    Sends email alerts when critical thresholds are breached.
+    Only active when ALERT_EMAIL_ENABLED=true in environment.
+    Designed to be called from the API after drift checks or error rate spikes.
+    """
+
+    def __init__(self):
+        self.enabled = os.getenv('ALERT_EMAIL_ENABLED', 'false').lower() == 'true'
+        self.smtp_host = os.getenv('SMTP_HOST', 'smtp.gmail.com')
+        self.smtp_port = int(os.getenv('SMTP_PORT', 587))
+        self.smtp_user = os.getenv('SMTP_USER', '')
+        self.smtp_password = os.getenv('SMTP_PASSWORD', '')
+        self.to_addr = os.getenv('ALERT_EMAIL_TO', '')
+        self.from_addr = os.getenv('ALERT_EMAIL_FROM', 'alerts@regime.app')
+
+    def send_alert(self, subject: str, body: str):
+        """Send an alert email. Silently skips if not enabled or credentials missing."""
+        if not self.enabled:
+            logger.info(f"[Alert] Email disabled. Would have sent: {subject}")
+            return
+        if not self.smtp_user or not self.smtp_password:
+            logger.warning("[Alert] SMTP credentials not set. Skipping email.")
+            return
+        try:
+            msg = MIMEText(body)
+            msg['Subject'] = f"[Market Regime Alert] {subject}"
+            msg['From'] = self.from_addr
+            msg['To'] = self.to_addr
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_user, self.smtp_password)
+                server.send_message(msg)
+            logger.info(f"[Alert] Email sent: {subject}")
+        except Exception as e:
+            logger.error(f"[Alert] Failed to send email: {e}")
+
+    def drift_alert(self, regime_type: str, n_drifting: int, total: int):
+        self.send_alert(
+            subject=f"Data Drift Detected — {regime_type}",
+            body=f"{n_drifting}/{total} features drifting in {regime_type} regime.\nCheck Grafana: http://localhost:3000"
+        )
+
+    def error_rate_alert(self, error_rate: float):
+        self.send_alert(
+            subject=f"High API Error Rate — {error_rate:.1f}%",
+            body=f"API error rate exceeded threshold: {error_rate:.1f}% (threshold: 5%)\nCheck logs at http://localhost:8000/docs"
+        )
+
+
+# Singleton — import and use this in api/main.py
+alert_manager = AlertManager()
 
 
 class SystemMetricsCollector:
