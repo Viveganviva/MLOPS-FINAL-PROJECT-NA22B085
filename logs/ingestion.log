@@ -1,0 +1,22 @@
+2026-04-28 13:51:16 | INFO     | Downloaded SPY to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\SPY_train.csv
+2026-04-28 13:51:17 | INFO     | Downloaded QQQ to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\QQQ_train.csv
+2026-04-28 13:51:17 | INFO     | Downloaded IWM to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\IWM_train.csv
+2026-04-28 13:51:18 | INFO     | Downloaded GLD to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\GLD_train.csv
+2026-04-28 13:51:19 | INFO     | Downloaded TLT to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\TLT_train.csv
+2026-04-28 13:51:19 | INFO     | Downloaded ^VIX to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\VIX_train.csv
+2026-04-28 13:51:19 | INFO     | Training data validation completed for 6 files
+2026-04-28 13:51:20 | INFO     | Downloaded SPY to C:\Viva files\Sem 8\MLOPS\Final Project\data\simulation\SPY_sim.csv
+2026-04-28 13:51:20 | INFO     | Downloaded ^VIX to C:\Viva files\Sem 8\MLOPS\Final Project\data\simulation\VIX_sim.csv
+2026-04-28 13:51:20 | INFO     | Simulation data saved to C:\Viva files\Sem 8\MLOPS\Final Project\data\simulation\SPY_sim.csv and C:\Viva files\Sem 8\MLOPS\Final Project\data\simulation\VIX_sim.csv
+2026-04-28 13:51:20 | INFO     | Baseline statistics written to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
+2026-04-28 15:33:40 | INFO     | Downloaded SPY to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\SPY_train.csv
+2026-04-28 15:33:41 | INFO     | Downloaded QQQ to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\QQQ_train.csv
+2026-04-28 15:33:41 | INFO     | Downloaded IWM to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\IWM_train.csv
+2026-04-28 15:33:42 | INFO     | Downloaded GLD to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\GLD_train.csv
+2026-04-28 15:33:43 | INFO     | Downloaded TLT to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\TLT_train.csv
+2026-04-28 15:33:44 | INFO     | Downloaded ^VIX to C:\Viva files\Sem 8\MLOPS\Final Project\data\raw\VIX_train.csv
+2026-04-28 15:33:44 | INFO     | Training data validation completed for 6 files
+2026-04-28 15:33:44 | INFO     | Downloaded SPY to C:\Viva files\Sem 8\MLOPS\Final Project\data\simulation\SPY_sim.csv
+2026-04-28 15:33:45 | INFO     | Downloaded ^VIX to C:\Viva files\Sem 8\MLOPS\Final Project\data\simulation\VIX_sim.csv
+2026-04-28 15:33:45 | INFO     | Simulation data saved to C:\Viva files\Sem 8\MLOPS\Final Project\data\simulation\SPY_sim.csv and C:\Viva files\Sem 8\MLOPS\Final Project\data\simulation\VIX_sim.csv
+2026-04-28 15:33:45 | INFO     | Baseline statistics written to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json

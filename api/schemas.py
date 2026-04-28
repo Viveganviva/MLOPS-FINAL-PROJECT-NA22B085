@@ -24,6 +24,7 @@ class SingleRegimeResult(BaseModel):
     regime_type: str
     predicted_label: str
     confidence: float
+    confidence_level: str
     proba_class_0: float
     proba_class_1: float
     inference_date: str

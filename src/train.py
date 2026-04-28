@@ -149,21 +149,64 @@ def _load_feature_frame(features_path: Path, label_col: str) -> pd.DataFrame:
     return frame
 
 
-def _time_split(frame: pd.DataFrame, label_col: str, val_split_date: str, test_split_date: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
-    """Split a time-indexed frame into train, validation, and test partitions."""
+def _time_split(
+    frame: pd.DataFrame,
+    label_col: str,
+    val_split_date: str,
+    test_split_date: str,
+) -> tuple:
+    """
+    Split a time-indexed feature frame into train/val/test partitions.
 
-    train = frame.loc[frame.index < pd.Timestamp(val_split_date)]
-    val = frame.loc[(frame.index >= pd.Timestamp(val_split_date)) & (frame.index < pd.Timestamp(test_split_date))]
-    test = frame.loc[frame.index >= pd.Timestamp(test_split_date)]
+    Supports two modes:
+      1. Absolute dates: '2022-01-01' — used for initial training on fixed historical data
+      2. Relative splits: 'last_Xpct' — used during retraining when data window grows
+         e.g. val_split_date='last_20pct', test_split_date='last_10pct'
+         means val = last 20% of data, test = last 10% of data (test is subset of val window)
 
-    feature_columns = [column for column in frame.columns if column != label_col]
-    x_train = train[feature_columns]
-    x_val = val[feature_columns]
-    x_test = test[feature_columns]
-    y_train = train[label_col]
-    y_val = val[label_col]
-    y_test = test[label_col]
-    return x_train, x_val, x_test, y_train, y_val, y_test
+    During normal initial training, absolute dates are used from params.yaml.
+    During retraining triggered by drift, the retraining manager can pass relative
+    splits so the model always trains on ~80% of available data regardless of
+    how much new data has accumulated.
+    """
+    n = len(frame)
+
+    # Parse val_split_date
+    if isinstance(val_split_date, str) and val_split_date.startswith('last_') and val_split_date.endswith('pct'):
+        val_pct = float(val_split_date.replace('last_', '').replace('pct', '')) / 100.0
+        val_start_idx = int(n * (1 - val_pct))
+        val_start_ts = frame.index[val_start_idx]
+    else:
+        val_start_ts = pd.Timestamp(val_split_date)
+
+    # Parse test_split_date
+    if isinstance(test_split_date, str) and test_split_date.startswith('last_') and test_split_date.endswith('pct'):
+        test_pct = float(test_split_date.replace('last_', '').replace('pct', '')) / 100.0
+        test_start_idx = int(n * (1 - test_pct))
+        test_start_ts = frame.index[test_start_idx]
+    else:
+        test_start_ts = pd.Timestamp(test_split_date)
+
+    # Validate that splits produce non-empty partitions
+    train = frame.loc[frame.index < val_start_ts]
+    val = frame.loc[(frame.index >= val_start_ts) & (frame.index < test_start_ts)]
+    test = frame.loc[frame.index >= test_start_ts]
+
+    for split_name, split_df in [('train', train), ('val', val), ('test', test)]:
+        if len(split_df) == 0:
+            raise ValueError(
+                f"Time split produced an empty '{split_name}' partition. "
+                f"Data range: {frame.index.min().date()} to {frame.index.max().date()}. "
+                f"val_split_date={val_split_date}, test_split_date={test_split_date}. "
+                f"For retraining on new data windows, consider using relative splits like "
+                f"val_split_date='last_20pct', test_split_date='last_10pct'."
+            )
+
+    feature_columns = [col for col in frame.columns if col != label_col]
+    return (
+        train[feature_columns], val[feature_columns], test[feature_columns],
+        train[label_col], val[label_col], test[label_col],
+    )
 
 
 def _prepare_target_encoder(y_train: pd.Series, y_val: pd.Series, y_test: pd.Series) -> tuple[LabelEncoder, np.ndarray, np.ndarray, np.ndarray]:
@@ -174,28 +217,59 @@ def _prepare_target_encoder(y_train: pd.Series, y_val: pd.Series, y_test: pd.Ser
     return encoder, encoder.transform(y_train.astype(str)), encoder.transform(y_val.astype(str)), encoder.transform(y_test.astype(str))
 
 
-def _build_estimator(model_params: dict[str, Any]) -> Any:
-    """Create the primary classifier, using XGBoost when available and a tree fallback otherwise."""
+def _build_estimator(model_params: dict, y_train_enc=None, n_classes: int = 2) -> tuple:
+    """
+    Create the primary XGBoost classifier with automatic objective selection.
+
+    For binary problems (2 classes) we use 'binary:logistic' which does not
+    require num_class to be set. For multiclass problems we use
+    'multi:softprob' with num_class set explicitly.
+
+    sample_weight is computed using sklearn's compute_sample_weight so that
+    minority classes (e.g. Bear at 2%) are not drowned out by the majority.
+    """
+    from sklearn.utils.class_weight import compute_sample_weight
+
+    sample_weight = None
+    if y_train_enc is not None:
+        sample_weight = compute_sample_weight(class_weight="balanced", y=y_train_enc)
 
     if XGBClassifier is not None:
-        return XGBClassifier(
-            n_estimators=int(model_params["n_estimators"]),
-            max_depth=int(model_params["max_depth"]),
-            learning_rate=float(model_params["learning_rate"]),
-            subsample=float(model_params["subsample"]),
-            min_child_weight=int(model_params.get("min_child_weight", 1)),
-            objective="multi:softprob",
-            eval_metric="mlogloss",
-            random_state=int(TRAINING_PARAMS["random_state"]),
-            tree_method="hist",
-        )
+        if n_classes == 2:
+            model = XGBClassifier(
+                n_estimators=int(model_params["n_estimators"]),
+                max_depth=int(model_params["max_depth"]),
+                learning_rate=float(model_params["learning_rate"]),
+                subsample=float(model_params["subsample"]),
+                min_child_weight=int(model_params.get("min_child_weight", 1)),
+                objective="binary:logistic",
+                eval_metric="logloss",
+                random_state=int(TRAINING_PARAMS["random_state"]),
+                tree_method="hist",
+            )
+        else:
+            model = XGBClassifier(
+                n_estimators=int(model_params["n_estimators"]),
+                max_depth=int(model_params["max_depth"]),
+                learning_rate=float(model_params["learning_rate"]),
+                subsample=float(model_params["subsample"]),
+                min_child_weight=int(model_params.get("min_child_weight", 1)),
+                objective="multi:softprob",
+                num_class=n_classes,
+                eval_metric="mlogloss",
+                random_state=int(TRAINING_PARAMS["random_state"]),
+                tree_method="hist",
+            )
+        return model, sample_weight
 
-    logger.warning("xgboost is unavailable; falling back to RandomForestClassifier for training.")
-    return RandomForestClassifier(
+    logger.warning("xgboost unavailable; falling back to RandomForestClassifier.")
+    model = RandomForestClassifier(
         n_estimators=int(model_params["n_estimators"]),
         max_depth=int(model_params["max_depth"]),
+        class_weight="balanced",
         random_state=int(TRAINING_PARAMS["random_state"]),
     )
+    return model, None
 
 
 def _feature_importance_values(model: Any, feature_names: list[str]) -> np.ndarray:
@@ -326,13 +400,14 @@ def _log_to_mlflow(run, regime_type: str, model: Any, scaler: StandardScaler, im
     if MlflowClient is not None:
         try:
             client = MlflowClient()
-            latest = client.get_latest_versions(model_name, stages=["None"])
+            versions = client.search_model_versions(f"name='{model_name}'")
+            latest = sorted(versions, key=lambda v: int(v.version), reverse=True)
             if latest:
-                client.transition_model_version_stage(model_name, latest[0].version, "Production")
-                logger.info("Model %s v%s -> Production", model_name, latest[0].version)
+                client.set_registered_model_alias(model_name, "production", latest[0].version)
+                logger.info("Model %s v%s -> alias 'production'", model_name, latest[0].version)
                 model_version = latest[0].version
         except Exception as exc:
-            logger.warning("Could not transition model %s to Production: %s", model_name, exc)
+            logger.warning("Could not set model alias for %s: %s", model_name, exc)
 
     return run_id, model_version
 
@@ -344,11 +419,31 @@ def train_single_regime(regime_type: str, features_path: Path, label_col: str, e
     logger.info("[%s] Loaded feature frame %s", regime_type, frame.shape)
     logger.info("[%s] Label distribution: %s", regime_type, frame[label_col].value_counts(dropna=False).to_dict())
 
+    # Drop rows labelled 'Neutral' before splitting.
+    # Neutral means the three labelling methods disagreed — it carries no
+    # reliable signal and forces the model into a 3-class problem where
+    # one class is meaningless noise. Dropping it restores the clean binary
+    # classification that matched the notebook experiments.
+    if "Neutral" in frame[label_col].values:
+        before = len(frame)
+        frame = frame[frame[label_col] != "Neutral"].copy()
+        after = len(frame)
+        logger.info(
+            "[%s] Dropped %d Neutral rows -> %d rows remain for binary training",
+            regime_type, before - after, after,
+        )
+    binary_dist = frame[label_col].value_counts()
+    print(f"\n[{regime_type.upper()}] Binary label distribution after dropping Neutral:")
+    for label_val, count in binary_dist.items():
+        pct = 100 * count / len(frame)
+        print(f"  {label_val}: {count} rows ({pct:.1f}%)")
+
+    # Use env-var overrides for retraining runs; fall back to params for initial training
+    val_split = os.getenv('RETRAIN_VAL_SPLIT', TRAINING_PARAMS['val_split_date'])
+    test_split = os.getenv('RETRAIN_TEST_SPLIT', TRAINING_PARAMS['test_split_date'])
+
     x_train, x_val, x_test, y_train, y_val, y_test = _time_split(
-        frame,
-        label_col,
-        TRAINING_PARAMS["val_split_date"],
-        TRAINING_PARAMS["test_split_date"],
+        frame, label_col, val_split, test_split
     )
 
     print(f"[{regime_type.upper()}] Train/Val/Test sizes: {len(x_train)}/{len(x_val)}/{len(x_test)}")
@@ -364,10 +459,11 @@ def train_single_regime(regime_type: str, features_path: Path, label_col: str, e
     with classes_path.open("w", encoding="utf-8") as handle:
         json.dump(encoder.classes_.tolist(), handle, indent=2)
 
-    xgb_model = _build_estimator(model_params)
-    xgb_model.fit(x_train_scaled, y_train_enc)
+    n_classes = len(encoder.classes_)
+    xgb_model, sample_weight = _build_estimator(model_params, y_train_enc, n_classes=n_classes)
+    xgb_model.fit(x_train_scaled, y_train_enc, sample_weight=sample_weight)
 
-    lr_model = LogisticRegression(max_iter=2000, multi_class="auto", random_state=int(TRAINING_PARAMS["random_state"]))
+    lr_model = LogisticRegression(max_iter=2000, class_weight="balanced", random_state=int(TRAINING_PARAMS["random_state"]))
     lr_model.fit(x_train_scaled, y_train_enc)
 
     xgb_train_metrics = _evaluate_split(xgb_model, x_train_scaled, y_train_enc)
@@ -379,9 +475,20 @@ def train_single_regime(regime_type: str, features_path: Path, label_col: str, e
 
     _format_comparison_table(
         regime_type,
-        {"val_f1": xgb_val_metrics["f1"], "test_f1": xgb_test_metrics["f1"], "test_accuracy": xgb_test_metrics["accuracy"], "test_precision": xgb_test_metrics["precision"], "test_recall": xgb_test_metrics["recall"], "test_auc": xgb_test_metrics["auc"]},
+        {"val_f1": xgb_val_metrics["f1"], "val_accuracy": xgb_val_metrics["accuracy"], "test_f1": xgb_test_metrics["f1"], "test_accuracy": xgb_test_metrics["accuracy"], "test_precision": xgb_test_metrics["precision"], "test_recall": xgb_test_metrics["recall"], "test_auc": xgb_test_metrics["auc"]},
         {"val_f1": lr_val_metrics["f1"], "val_accuracy": lr_val_metrics["accuracy"], "test_f1": lr_test_metrics["f1"], "test_accuracy": lr_test_metrics["accuracy"], "test_precision": lr_test_metrics["precision"], "test_recall": lr_test_metrics["recall"], "test_auc": lr_test_metrics["auc"]},
     )
+
+    # Print class imbalance info so it's visible in logs and report
+    from collections import Counter
+    class_counts = Counter(y_train_enc)
+    total = sum(class_counts.values())
+    print(f"\n[{regime_type.upper()}] Training class distribution:")
+    for cls_idx, count in sorted(class_counts.items()):
+        cls_name = encoder.classes_[cls_idx]
+        pct = 100 * count / total
+        weight = total / (len(class_counts) * count)
+        print(f"  {cls_name}: {count} samples ({pct:.1f}%) -> sample weight: {weight:.2f}x")
 
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     importance_path, confusion_path = _save_plots(regime_type, xgb_model, list(x_train.columns), x_test_scaled, y_test_enc)

@@ -117,6 +117,14 @@ class RetrainingManager:
         try:
             data_ingestion.download_training_data()
             feature_engineering.main()
+
+            # For retraining runs, we override split dates via env vars so the model
+            # always uses the most recent data for validation and testing regardless
+            # of how much new data has been accumulated since initial training.
+            # The train module reads these env vars and passes them to _time_split().
+            os.environ['RETRAIN_VAL_SPLIT'] = 'last_20pct'
+            os.environ['RETRAIN_TEST_SPLIT'] = 'last_10pct'
+
             train.main(force=True)
             self._update_training_report_timestamp()
 

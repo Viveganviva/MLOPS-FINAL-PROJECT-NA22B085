@@ -210,11 +210,23 @@ def predict_regime(ticker: str, regime_type: str, registry: ModelRegistry | None
         predicted_label = prediction if isinstance(prediction, str) else str(prediction)
     confidence = float(np.max(probabilities))
 
+    # Interpret confidence level for the frontend and API consumers.
+    # During training we dropped 'Neutral' rows where labelling methods disagreed.
+    # In production that uncertainty surfaces as low model confidence instead.
+    # Thresholds: < 0.60 = uncertain, 0.60-0.75 = moderate, > 0.75 = high confidence.
+    if confidence >= 0.75:
+        confidence_level = "HIGH"
+    elif confidence >= 0.60:
+        confidence_level = "MODERATE"
+    else:
+        confidence_level = "LOW — treat as uncertain"
+
     return {
         "ticker": ticker,
         "regime_type": regime_type,
         "predicted_label": predicted_label,
         "confidence": confidence,
+        "confidence_level": confidence_level,
         "proba_class_0": float(probabilities[0]) if len(probabilities) > 0 else 0.0,
         "proba_class_1": float(probabilities[1]) if len(probabilities) > 1 else confidence,
         "inference_date": str(inference_date.date()),

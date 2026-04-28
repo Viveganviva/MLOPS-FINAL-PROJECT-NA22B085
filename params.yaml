@@ -37,7 +37,7 @@ features:
 
 training:
   val_split_date: '2021-01-01'
-  test_split_date: '2023-01-01'
+  test_split_date: '2022-01-01'
   random_state: 42
   trend_model:
     n_estimators: 200

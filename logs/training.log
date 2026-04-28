@@ -1,0 +1,48 @@
+2026-04-28 14:00:17 | WARNING  | Retrying (Retry(total=6, connect=6, read=7, redirect=7, status=7)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022A456FD7C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /api/2.0/mlflow/experiments/search
+2026-04-28 14:00:25 | WARNING  | Retrying (Retry(total=5, connect=5, read=7, redirect=7, status=7)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022A45A4C1A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /api/2.0/mlflow/experiments/search
+2026-04-28 14:00:38 | WARNING  | Retrying (Retry(total=4, connect=4, read=7, redirect=7, status=7)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022A45A4C9E0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /api/2.0/mlflow/experiments/search
+2026-04-28 14:00:59 | WARNING  | Retrying (Retry(total=3, connect=3, read=7, redirect=7, status=7)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022A45A4CBC0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /api/2.0/mlflow/experiments/search
+2026-04-28 14:01:35 | WARNING  | Retrying (Retry(total=2, connect=2, read=7, redirect=7, status=7)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022A45A4CDD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /api/2.0/mlflow/experiments/search
+2026-04-28 14:02:44 | WARNING  | Retrying (Retry(total=1, connect=1, read=7, redirect=7, status=7)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022A45A4CFB0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /api/2.0/mlflow/experiments/search
+2026-04-28 14:04:48 | WARNING  | Retrying (Retry(total=0, connect=0, read=7, redirect=7, status=7)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022A45A4CE30>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /api/2.0/mlflow/experiments/search
+2026-04-28 14:04:52 | WARNING  | MLflow server not reachable (API request to http://localhost:5000/api/2.0/mlflow/experiments/search failed with exception HTTPConnectionPool(host='localhost', port=5000): Max retries exceeded with url: /api/2.0/mlflow/experiments/search (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022A45A4D3A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))). Falling back to local store: ./mlruns
+2026-04-28 14:04:52 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 14:04:52 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 14:52:15 | INFO     | Connected to MLflow server at: ./mlruns
+2026-04-28 14:52:15 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 14:52:15 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 15:09:46 | INFO     | Connected to MLflow server at: ./mlruns
+2026-04-28 15:09:46 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 15:09:46 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 15:10:02 | INFO     | Model TrendRegimeModel v1 -> Production
+2026-04-28 15:10:02 | INFO     | MLflow run ID: f3ff9b8f2bd24c2c907b35657d6882e9
+2026-04-28 15:10:02 | INFO     | [vol] Loaded feature frame (3252, 23)
+2026-04-28 15:10:02 | INFO     | [vol] Label distribution: {'LowVol': 1892, 'HighVol': 1360}
+2026-04-28 15:31:56 | INFO     | Connected to MLflow server at: ./mlruns
+2026-04-28 15:31:57 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 15:31:57 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 15:31:57 | INFO     | [trend] Dropped 1119 Neutral rows -> 1954 rows remain for binary training
+2026-04-28 15:32:09 | INFO     | Model TrendRegimeModel v2 -> alias 'production'
+2026-04-28 15:32:09 | INFO     | MLflow run ID: 7146f0f94afe4ee4a2eaaa980bed50ee
+2026-04-28 15:32:09 | INFO     | [vol] Loaded feature frame (3252, 23)
+2026-04-28 15:32:09 | INFO     | [vol] Label distribution: {'LowVol': 1892, 'HighVol': 1360}
+2026-04-28 15:32:17 | INFO     | Model VolatilityRegimeModel v1 -> alias 'production'
+2026-04-28 15:32:17 | INFO     | MLflow run ID: c408f0a5992f4e3d8aaa8a43e3c9e160
+2026-04-28 15:32:17 | INFO     | [bull_bear] Loaded feature frame (3223, 37)
+2026-04-28 15:32:17 | INFO     | [bull_bear] Label distribution: {'Bull': 3149, 'Bear': 74}
+2026-04-28 15:32:26 | INFO     | Model BullBearRegimeModel v1 -> alias 'production'
+2026-04-28 15:32:26 | INFO     | MLflow run ID: 7719febfc0f14f8d9566f4d9e20f3e99
+2026-04-28 15:34:03 | INFO     | Connected to MLflow server at: ./mlruns
+2026-04-28 15:34:03 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 15:34:03 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 15:34:03 | INFO     | [trend] Dropped 1119 Neutral rows -> 1954 rows remain for binary training
+2026-04-28 15:34:16 | INFO     | Model TrendRegimeModel v3 -> alias 'production'
+2026-04-28 15:34:16 | INFO     | MLflow run ID: afe2dc84ffb346bfbe9d1642b74250ab
+2026-04-28 15:34:16 | INFO     | [vol] Loaded feature frame (3252, 23)
+2026-04-28 15:34:16 | INFO     | [vol] Label distribution: {'LowVol': 1892, 'HighVol': 1360}
+2026-04-28 15:34:25 | INFO     | Model VolatilityRegimeModel v2 -> alias 'production'
+2026-04-28 15:34:25 | INFO     | MLflow run ID: 7b13b9d82e19432ba542f257c9a4bb19
+2026-04-28 15:34:25 | INFO     | [bull_bear] Loaded feature frame (3223, 37)
+2026-04-28 15:34:25 | INFO     | [bull_bear] Label distribution: {'Bull': 3149, 'Bear': 74}
+2026-04-28 15:34:34 | INFO     | Model BullBearRegimeModel v2 -> alias 'production'
+2026-04-28 15:34:34 | INFO     | MLflow run ID: 5f0cb7f4ff4e4624afb885991afb3069

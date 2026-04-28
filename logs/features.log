@@ -1,0 +1,18 @@
+2026-04-28 13:56:45 | INFO     | Trend regime label distribution: {'Neutral': 1206, 'MeanReverting': 1194, 'Trending': 872}
+2026-04-28 13:56:45 | INFO     | Built trend feature frame with 3073 rows and 28 features
+2026-04-28 13:56:45 | INFO     | Volatility regime label distribution: {'LowVol': 1911, 'HighVol': 1361}
+2026-04-28 13:56:45 | INFO     | Built volatility feature frame with 3252 rows and 22 features
+2026-04-28 13:56:45 | INFO     | Bull/bear regime label distribution: {'Bull': 3198, 'Bear': 74}
+2026-04-28 13:56:45 | INFO     | Built bull/bear feature frame with 3223 rows and 36 features
+2026-04-28 13:56:46 | INFO     | Saved baseline stats for trend to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
+2026-04-28 13:56:46 | INFO     | Saved baseline stats for vol to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
+2026-04-28 13:56:46 | INFO     | Saved baseline stats for bull_bear to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
+2026-04-28 15:33:53 | INFO     | Trend regime label distribution: {'Neutral': 1206, 'MeanReverting': 1194, 'Trending': 872}
+2026-04-28 15:33:53 | INFO     | Built trend feature frame with 3073 rows and 28 features
+2026-04-28 15:33:53 | INFO     | Volatility regime label distribution: {'LowVol': 1911, 'HighVol': 1361}
+2026-04-28 15:33:53 | INFO     | Built volatility feature frame with 3252 rows and 22 features
+2026-04-28 15:33:53 | INFO     | Bull/bear regime label distribution: {'Bull': 3198, 'Bear': 74}
+2026-04-28 15:33:53 | INFO     | Built bull/bear feature frame with 3223 rows and 36 features
+2026-04-28 15:33:54 | INFO     | Saved baseline stats for trend to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
+2026-04-28 15:33:54 | INFO     | Saved baseline stats for vol to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
+2026-04-28 15:33:54 | INFO     | Saved baseline stats for bull_bear to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json

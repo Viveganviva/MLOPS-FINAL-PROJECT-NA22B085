@@ -1,2 +1,139 @@
 schema: '2.0'
-stages: {}
+stages:
+  ingest:
+    cmd: python src/data_ingestion.py
+    deps:
+    - path: params.yaml
+      hash: md5
+      md5: 156cd4e3d04b872e268e0f982dde9bb1
+      size: 1891
+    - path: src/data_ingestion.py
+      hash: md5
+      md5: b7046664ac2dc2b3c67da71cc95213a6
+      size: 17203
+    params:
+      params.yaml:
+        data.sim_end: '2024-12-31'
+        data.sim_start: '2023-01-01'
+        data.train_end: '2022-12-31'
+        data.train_start: '2010-01-01'
+        data.train_tickers:
+        - SPY
+        - QQQ
+        - IWM
+        - GLD
+        - TLT
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: 0120112e68de57a7cef45cd529f03500.dir
+      size: 2161054
+      nfiles: 6
+    - path: data/simulation
+      hash: md5
+      md5: 2f12829f878752a1fc8115b1bf21db2b.dir
+      size: 107598
+      nfiles: 2
+  featurize:
+    cmd: python src/feature_engineering.py
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 0120112e68de57a7cef45cd529f03500.dir
+      size: 2161054
+      nfiles: 6
+    - path: params.yaml
+      hash: md5
+      md5: 156cd4e3d04b872e268e0f982dde9bb1
+      size: 1891
+    - path: src/feature_engineering.py
+      hash: md5
+      md5: 6cab7c84bf4bd9a677340cd983338dac
+      size: 29706
+    params:
+      params.yaml:
+        features.hurst_window: 60
+        features.mid_window: 20
+        features.rsi_period: 14
+        features.short_window: 5
+    outs:
+    - path: data/baselines/feature_baselines.json
+      hash: md5
+      md5: 4e79a3c2b406840178dcd684393c88f4
+      size: 8461
+    - path: data/processed
+      hash: md5
+      md5: ec333077e518e849c9d5a392faccf59b.dir
+      size: 5304937
+      nfiles: 3
+  train:
+    cmd: python src/train.py --force
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: ec333077e518e849c9d5a392faccf59b.dir
+      size: 5304937
+      nfiles: 3
+    - path: params.yaml
+      hash: md5
+      md5: 156cd4e3d04b872e268e0f982dde9bb1
+      size: 1891
+    - path: src/train.py
+      hash: md5
+      md5: 34d12215e5178066bf1527d682b46d59
+      size: 28663
+    params:
+      params.yaml:
+        training.bull_bear_model:
+          n_estimators: 300
+          max_depth: 5
+          learning_rate: 0.03
+          subsample: 0.8
+        training.test_split_date: '2022-01-01'
+        training.trend_model:
+          n_estimators: 200
+          max_depth: 6
+          learning_rate: 0.05
+          subsample: 0.8
+          min_child_weight: 10
+        training.val_split_date: '2021-01-01'
+        training.vol_model:
+          n_estimators: 200
+          max_depth: 4
+          learning_rate: 0.05
+          subsample: 0.8
+    outs:
+    - path: models
+      hash: md5
+      md5: 5abf65dfd9a2c3c60c4bea0575aa460e.dir
+      size: 1207162
+      nfiles: 18
+  evaluate:
+    cmd: python src/save_dvc_metrics.py
+    deps:
+    - path: models
+      hash: md5
+      md5: 5abf65dfd9a2c3c60c4bea0575aa460e.dir
+      size: 1207162
+      nfiles: 18
+    - path: src/save_dvc_metrics.py
+      hash: md5
+      md5: 2264d9db4cffcc27c0a7d0fb3b9f9364
+      size: 5011
+    outs:
+    - path: dvc_metrics.json
+      hash: md5
+      md5: 98ce78b2cbf4223ddc313c7c632d2bf3
+      size: 298
+    - path: dvc_plots/confusion_matrix_bull_bear.csv
+      hash: md5
+      md5: 3953b8af9b6c079d7ef1302fbd6383f9
+      size: 2779
+    - path: dvc_plots/confusion_matrix_trend.csv
+      hash: md5
+      md5: 16c5b9e4d40a4b82051559d0802d9c6d
+      size: 6174
+    - path: dvc_plots/confusion_matrix_vol.csv
+      hash: md5
+      md5: 2e3eab5c495ac8823a933f6d08d3a7df
+      size: 4247

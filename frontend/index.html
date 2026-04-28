@@ -244,6 +244,15 @@
       background: linear-gradient(90deg, var(--accent), #68e4ff);
       transition: width 180ms ease;
     }
+    .confidence-level {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+    .confidence-level.low {
+      color: var(--orange);
+    }
 
     .card-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 0.85rem; }
     .loading {
@@ -382,6 +391,7 @@
         <div class="progress-wrap">
           <div class="progress-meta"><span>Confidence</span><span id="trendConfidence">0%</span></div>
           <div class="progress"><div id="trendBar" class="progress-bar"></div></div>
+          <div id="trendConfidenceLevel" class="confidence-level">-</div>
         </div>
         <div class="card-footer"><span>As of: <strong id="trendDate">-</strong></span><span id="trendMeta">No prediction yet</span></div>
       </article>
@@ -399,6 +409,7 @@
         <div class="progress-wrap">
           <div class="progress-meta"><span>Confidence</span><span id="volConfidence">0%</span></div>
           <div class="progress"><div id="volBar" class="progress-bar"></div></div>
+          <div id="volConfidenceLevel" class="confidence-level">-</div>
         </div>
         <div class="card-footer"><span>As of: <strong id="volDate">-</strong></span><span id="volMeta">No prediction yet</span></div>
       </article>
@@ -416,6 +427,7 @@
         <div class="progress-wrap">
           <div class="progress-meta"><span>Confidence</span><span id="bull_bearConfidence">0%</span></div>
           <div class="progress"><div id="bull_bearBar" class="progress-bar"></div></div>
+          <div id="bull_bearConfidenceLevel" class="confidence-level">-</div>
         </div>
         <div class="card-footer"><span>As of: <strong id="bull_bearDate">-</strong></span><span id="bull_bearMeta">No prediction yet</span></div>
       </article>
@@ -517,17 +529,22 @@
       const labelNode = document.getElementById(`${regime}Label`);
       const barNode = document.getElementById(`${regime}Bar`);
       const confidenceNode = document.getElementById(`${regime}Confidence`);
+      const confidenceLevelNode = document.getElementById(`${regime}ConfidenceLevel`);
       const dateNode = document.getElementById(`${regime}Date`);
       const metaNode = document.getElementById(`${regime}Meta`);
 
       const confidence = Math.max(0, Math.min(1, Number(result.confidence || 0)));
       const percent = Math.round(confidence * 100);
       const badgeClass = labelClass(result.predicted_label);
+      const confidenceLevel = String(result.confidence_level || '-');
 
       labelNode.textContent = String(result.predicted_label || 'Unknown').toUpperCase();
       labelNode.className = `badge ${badgeClass}`;
       barNode.style.width = `${percent}%`;
       confidenceNode.textContent = `${percent}%`;
+      confidenceLevelNode.textContent = confidenceLevel;
+      confidenceLevelNode.className = confidenceLevel.startsWith('LOW') ? 'confidence-level low' : 'confidence-level';
+      confidenceLevelNode.title = confidenceLevel.startsWith('LOW') ? 'Model is uncertain — market may be in a transitional state.' : '';
       dateNode.textContent = result.inference_date || result.as_of_date || '-';
       metaNode.textContent = `${labelExplanation(regime, result.predicted_label)} • ${Number(result.inference_latency_ms || 0).toFixed(1)} ms`;
     }
