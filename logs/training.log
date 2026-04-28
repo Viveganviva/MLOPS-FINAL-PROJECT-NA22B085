@@ -46,3 +46,14 @@
 2026-04-28 15:34:25 | INFO     | [bull_bear] Label distribution: {'Bull': 3149, 'Bear': 74}
 2026-04-28 15:34:34 | INFO     | Model BullBearRegimeModel v2 -> alias 'production'
 2026-04-28 15:34:34 | INFO     | MLflow run ID: 5f0cb7f4ff4e4624afb885991afb3069
+2026-04-28 19:37:55 | WARNING  | MLflow is not installed in the active environment; logging will be skipped.
+2026-04-28 19:37:55 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 19:37:55 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 19:37:55 | INFO     | [trend] Dropped 1119 Neutral rows -> 1954 rows remain for binary training
+2026-04-28 19:37:55 | WARNING  | xgboost unavailable; falling back to RandomForestClassifier.
+2026-04-28 19:37:56 | INFO     | [vol] Loaded feature frame (3252, 23)
+2026-04-28 19:37:56 | INFO     | [vol] Label distribution: {'LowVol': 1892, 'HighVol': 1360}
+2026-04-28 19:37:56 | WARNING  | xgboost unavailable; falling back to RandomForestClassifier.
+2026-04-28 19:37:57 | INFO     | [bull_bear] Loaded feature frame (3223, 37)
+2026-04-28 19:37:57 | INFO     | [bull_bear] Label distribution: {'Bull': 3149, 'Bear': 74}
+2026-04-28 19:37:57 | WARNING  | xgboost unavailable; falling back to RandomForestClassifier.

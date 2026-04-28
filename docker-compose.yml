@@ -111,19 +111,7 @@ services:
       - ./data:/opt/airflow/data
       - ./models:/opt/airflow/models
       - ./logs:/opt/airflow/logs
-    command: >
-      bash -c "
-        airflow db migrate &&
-        airflow users create
-          --username admin
-          --password admin
-          --firstname Admin
-          --lastname User
-          --role Admin
-          --email admin@example.com 2>/dev/null || true &&
-        airflow webserver --port 8080 &
-        airflow scheduler
-      "
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver --port 8080 & airflow scheduler"
     restart: on-failure
 
 volumes:
