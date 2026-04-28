@@ -29,6 +29,25 @@ else:
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PARAMS_PATH = PROJECT_ROOT / "params.yaml"
 
+def _ensure_flat_ohlcv(frame):
+    """
+    Defensive normaliser called at the start of every function that accepts
+    an OHLCV DataFrame. yfinance >= 0.2.18 returns MultiIndex columns like
+    ('Close', 'SPY') even for single-ticker downloads. This collapses any
+    such index down to a flat single level so frame['Close'] always works.
+    Safe to call multiple times.
+    """
+    import pandas as _pd
+    if frame is None:
+        return frame
+    if not hasattr(frame, "columns"):
+        return frame
+    if isinstance(frame.columns, _pd.MultiIndex):
+        frame = frame.copy()
+        frame.columns = frame.columns.get_level_values(0)
+        frame = frame.loc[:, ~frame.columns.duplicated()]
+    return frame
+
 
 def _load_params() -> dict[str, Any]:
     """Load the project parameter map from params.yaml at import time."""
@@ -73,6 +92,35 @@ MID_WINDOW = int(FEATURE_PARAMS["mid_window"])
 LONG_WINDOW = int(FEATURE_PARAMS["long_window"])
 
 logger = logging.getLogger(__name__)
+
+
+def _flatten_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    yfinance >= 0.2.18 returns MultiIndex columns like ('Close', 'SPY') even
+    for single-ticker downloads. Flatten them to simple strings like 'Close'.
+    Safe to call even if columns are already flat.
+    """
+    if isinstance(df.columns, pd.MultiIndex):
+        df = df.copy()
+        df.columns = df.columns.get_level_values(0)
+        df = df.loc[:, ~df.columns.duplicated()]
+    return df
+
+
+def _normalise_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Flatten MultiIndex columns that yfinance >= 0.2.18 returns even for
+    single-ticker downloads.  After download('SPY', ...) the columns look
+    like [('Close','SPY'), ('High','SPY'), ...].  We drop the ticker level
+    so downstream code can always access df['Close'] etc.
+    Also deduplicates any columns that appear twice after flattening.
+    """
+    df = _flatten_columns(df)
+    if isinstance(df.columns, pd.MultiIndex):
+        df = df.copy()
+        df.columns = df.columns.get_level_values(0)
+        df = df.loc[:, ~df.columns.duplicated()]
+    return df
 
 
 def setup_logging(level: int = logging.INFO) -> None:
@@ -120,7 +168,7 @@ def load_params(path: Path | str = PARAMS_PATH) -> dict[str, Any]:
 
 def _prepare_frame(df: pd.DataFrame) -> pd.DataFrame:
     """Return a sorted copy with a normalized datetime index and numeric OHLCV columns."""
-
+    df = _flatten_columns(df)
     frame = df.copy()
     frame.index = pd.to_datetime(frame.index).tz_localize(None)
     frame = frame.sort_index()
@@ -333,8 +381,17 @@ def _trend_label_from_signals(hurst: float, variance_ratio: float, autocorr: flo
 
 def label_trend_regime(df: pd.DataFrame) -> pd.DataFrame:
     """Label trend versus mean-reversion regimes using only label-safe signals."""
+    
+    df = _flatten_columns(df)
+    frame = _normalise_ohlcv(df)
+    frame = _ensure_flat_ohlcv(frame)
+    frame = _prepare_frame(frame)
+    if isinstance(frame.columns, pd.MultiIndex):
+        frame = frame.copy()
+        frame.columns = frame.columns.get_level_values(0)
+        frame = frame.loc[:, ~frame.columns.duplicated()]
+    close = frame["Close"]
 
-    frame = _prepare_frame(df)
     close = frame["Close"]
 
     frame["Label_Hurst"] = compute_hurst_exponent(close, HURST_WINDOW)
@@ -387,8 +444,13 @@ def _vol_regime_label_from_votes(method_a: bool, method_b: bool, method_c: bool)
 
 def label_vol_regime(df: pd.DataFrame, vix_df: pd.DataFrame) -> pd.DataFrame:
     """Label high- and low-volatility regimes using three independent methods."""
-
-    spy = _prepare_frame(df)
+    df = _flatten_columns(df)
+    vix_df = _flatten_columns(vix_df)
+    frame = _normalise_ohlcv(df)
+    frame = _ensure_flat_ohlcv(frame) 
+    vix_df = _ensure_flat_ohlcv(vix_df)
+    vix_df = _normalise_ohlcv(vix_df)
+    spy = _prepare_frame(frame)
     vix = _prepare_frame(vix_df)
     frame = spy.join(vix[["Close"]].rename(columns={"Close": "VIX_Close"}), how="inner")
 
@@ -415,8 +477,10 @@ def label_vol_regime(df: pd.DataFrame, vix_df: pd.DataFrame) -> pd.DataFrame:
 
 def label_bull_bear_regime(df: pd.DataFrame) -> pd.DataFrame:
     """Label bull and bear regimes using a rolling peak-to-trough drawdown rule."""
-
-    frame = _prepare_frame(df)
+    df = _flatten_columns(df)
+    frame = _normalise_ohlcv(df)
+    frame = _ensure_flat_ohlcv(frame)
+    frame = _prepare_frame(frame)
     rolling_high = frame["Close"].rolling(window=252, min_periods=126).max()
     frame["Final_Label"] = np.where(frame["Close"] < 0.8 * rolling_high, "Bear", "Bull")
 
@@ -427,7 +491,7 @@ def label_bull_bear_regime(df: pd.DataFrame) -> pd.DataFrame:
 
 def _finalize_feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
     """Drop incomplete rows and keep the final label attached to the features."""
-
+    frame = _flatten_columns(frame)
     cleaned = frame.dropna().copy()
     cleaned = cleaned.loc[:, ~cleaned.columns.duplicated()]
     return cleaned
@@ -435,12 +499,9 @@ def _finalize_feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
 
 def build_trend_features(spy_df: pd.DataFrame) -> pd.DataFrame:
     """Build trend-regime features from SPY OHLCV data."""
-
-    # Normalize column names — handles both flat and MultiIndex yfinance output
-    if isinstance(spy_df.columns, pd.MultiIndex):
-        spy_df = spy_df.copy()
-        spy_df.columns = spy_df.columns.get_level_values(0)
-        spy_df = spy_df.loc[:, ~spy_df.columns.duplicated()]
+    spy_df = _ensure_flat_ohlcv(spy_df)
+    spy_df = _flatten_columns(spy_df)
+    spy_df = _normalise_ohlcv(spy_df)
 
     # The label uses Hurst/VR/autocorr, so these values are intentionally excluded from the feature set to avoid leakage.
     frame = label_trend_regime(spy_df)
@@ -484,16 +545,12 @@ def build_trend_features(spy_df: pd.DataFrame) -> pd.DataFrame:
 
 def build_vol_features(spy_df: pd.DataFrame, vix_df: pd.DataFrame) -> pd.DataFrame:
     """Build volatility-regime features from SPY and VIX market data."""
-
-    # Normalize column names — handles both flat and MultiIndex yfinance output
-    if isinstance(spy_df.columns, pd.MultiIndex):
-        spy_df = spy_df.copy()
-        spy_df.columns = spy_df.columns.get_level_values(0)
-        spy_df = spy_df.loc[:, ~spy_df.columns.duplicated()]
-    if isinstance(vix_df.columns, pd.MultiIndex):
-        vix_df = vix_df.copy()
-        vix_df.columns = vix_df.columns.get_level_values(0)
-        vix_df = vix_df.loc[:, ~vix_df.columns.duplicated()]
+    spy_df = _ensure_flat_ohlcv(spy_df)
+    vix_df = _ensure_flat_ohlcv(vix_df)
+    spy_df = _flatten_columns(spy_df)
+    vix_df = _flatten_columns(vix_df)
+    spy_df = _normalise_ohlcv(spy_df)
+    vix_df = _normalise_ohlcv(vix_df)
 
     frame = label_vol_regime(spy_df, vix_df)
 
@@ -533,7 +590,12 @@ def build_vol_features(spy_df: pd.DataFrame, vix_df: pd.DataFrame) -> pd.DataFra
 
 def _cross_asset_frame(spy_df: pd.DataFrame, qqq_df: pd.DataFrame, iwm_df: pd.DataFrame, gld_df: pd.DataFrame, tlt_df: pd.DataFrame, vix_df: pd.DataFrame) -> pd.DataFrame:
     """Align all market frames on a shared trading calendar."""
-
+    spy_df = _flatten_columns(spy_df)
+    qqq_df = _flatten_columns(qqq_df)
+    iwm_df = _flatten_columns(iwm_df)
+    gld_df = _flatten_columns(gld_df)
+    tlt_df = _flatten_columns(tlt_df)
+    vix_df = _flatten_columns(vix_df)
     spy = _prepare_frame(spy_df)
     qqq = _prepare_frame(qqq_df)
     iwm = _prepare_frame(iwm_df)
@@ -553,32 +615,19 @@ def _cross_asset_frame(spy_df: pd.DataFrame, qqq_df: pd.DataFrame, iwm_df: pd.Da
 
 def build_bull_bear_features(spy_df: pd.DataFrame, qqq_df: pd.DataFrame, iwm_df: pd.DataFrame, gld_df: pd.DataFrame, tlt_df: pd.DataFrame, vix_df: pd.DataFrame) -> pd.DataFrame:
     """Build bull/bear features using SPY plus cross-asset confirmation signals."""
-
-    # Normalize column names — handles both flat and MultiIndex yfinance output
-    if isinstance(spy_df.columns, pd.MultiIndex):
-        spy_df = spy_df.copy()
-        spy_df.columns = spy_df.columns.get_level_values(0)
-        spy_df = spy_df.loc[:, ~spy_df.columns.duplicated()]
-    if isinstance(qqq_df.columns, pd.MultiIndex):
-        qqq_df = qqq_df.copy()
-        qqq_df.columns = qqq_df.columns.get_level_values(0)
-        qqq_df = qqq_df.loc[:, ~qqq_df.columns.duplicated()]
-    if isinstance(iwm_df.columns, pd.MultiIndex):
-        iwm_df = iwm_df.copy()
-        iwm_df.columns = iwm_df.columns.get_level_values(0)
-        iwm_df = iwm_df.loc[:, ~iwm_df.columns.duplicated()]
-    if isinstance(gld_df.columns, pd.MultiIndex):
-        gld_df = gld_df.copy()
-        gld_df.columns = gld_df.columns.get_level_values(0)
-        gld_df = gld_df.loc[:, ~gld_df.columns.duplicated()]
-    if isinstance(tlt_df.columns, pd.MultiIndex):
-        tlt_df = tlt_df.copy()
-        tlt_df.columns = tlt_df.columns.get_level_values(0)
-        tlt_df = tlt_df.loc[:, ~tlt_df.columns.duplicated()]
-    if isinstance(vix_df.columns, pd.MultiIndex):
-        vix_df = vix_df.copy()
-        vix_df.columns = vix_df.columns.get_level_values(0)
-        vix_df = vix_df.loc[:, ~vix_df.columns.duplicated()]
+    spy_df = _ensure_flat_ohlcv(spy_df); qqq_df = _ensure_flat_ohlcv(qqq_df); iwm_df = _ensure_flat_ohlcv(iwm_df); gld_df = _ensure_flat_ohlcv(gld_df); tlt_df = _ensure_flat_ohlcv(tlt_df); vix_df = _ensure_flat_ohlcv(vix_df)
+    spy_df = _flatten_columns(spy_df)
+    qqq_df = _flatten_columns(qqq_df)
+    iwm_df = _flatten_columns(iwm_df)
+    gld_df = _flatten_columns(gld_df)
+    tlt_df = _flatten_columns(tlt_df)
+    vix_df = _flatten_columns(vix_df)
+    spy_df = _normalise_ohlcv(spy_df)
+    qqq_df = _normalise_ohlcv(qqq_df)
+    iwm_df = _normalise_ohlcv(iwm_df)
+    gld_df = _normalise_ohlcv(gld_df)
+    tlt_df = _normalise_ohlcv(tlt_df)
+    vix_df = _normalise_ohlcv(vix_df)
 
     # Removed due to data leakage with SMA-based labels in experiment phase; using Method B labels instead.
     frame = label_bull_bear_regime(spy_df)
@@ -626,7 +675,7 @@ def build_bull_bear_features(spy_df: pd.DataFrame, qqq_df: pd.DataFrame, iwm_df:
 
 def save_baseline_stats(df: pd.DataFrame, regime_type: str) -> dict[str, Any]:
     """Persist mean and standard-deviation baselines for later drift comparison."""
-
+    df = _flatten_columns(df)
     baseline_path = BASELINE_DIR / "feature_baselines.json"
     BASELINE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -657,14 +706,14 @@ def save_baseline_stats(df: pd.DataFrame, regime_type: str) -> dict[str, Any]:
 
 def _label_distribution_text(frame: pd.DataFrame) -> str:
     """Format the label distribution as percentages for reporting."""
-
+    frame = _flatten_columns(frame)
     counts = frame["Final_Label"].value_counts(normalize=True).sort_index()
     return ", ".join(f"{label}={share * 100:.0f}%" for label, share in counts.items())
 
 
 def _feature_count(frame: pd.DataFrame) -> int:
     """Count only the feature columns, excluding the final label."""
-
+    frame = _flatten_columns(frame)
     return len([column for column in frame.columns if column != "Final_Label"])
 
 

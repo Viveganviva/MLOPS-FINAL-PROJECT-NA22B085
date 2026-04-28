@@ -328,6 +328,7 @@ async def predict_endpoint(payload: PredictionRequest) -> PredictionResponse:
                 regime_type=regime_result["regime_type"],
                 predicted_label=str(regime_result["predicted_label"]),
                 confidence=float(regime_result["confidence"]),
+                confidence_level=str(regime_result["confidence_level"]),
                 proba_class_0=float(regime_result["proba_class_0"]),
                 proba_class_1=float(regime_result["proba_class_1"]),
                 inference_date=str(regime_result["inference_date"]),

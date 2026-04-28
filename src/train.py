@@ -32,19 +32,25 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-try:  # pragma: no cover - optional dependency guard
+try:
     import mlflow
     import mlflow.sklearn
     from mlflow.tracking import MlflowClient
-except Exception:  # pragma: no cover - runtime fallback when MLflow is unavailable
-    mlflow = None  # type: ignore[assignment]
-    MlflowClient = None  # type: ignore[assignment]
+except ImportError as _mlflow_err:
+    import sys, traceback
+    print(f"[ERROR] MLflow import failed: {_mlflow_err}", file=sys.stderr)
+    traceback.print_exc()
+    mlflow = None
+    MlflowClient = None
 
-try:  # pragma: no cover - optional dependency guard
+
+try:
     from xgboost import XGBClassifier
-except Exception:  # pragma: no cover - runtime fallback when xgboost is unavailable
-    XGBClassifier = None  # type: ignore[assignment]
-
+except ImportError as _xgb_err:
+    import sys, traceback
+    print(f"[ERROR] XGBoost import failed: {_xgb_err}", file=sys.stderr)
+    traceback.print_exc()
+    XGBClassifier = None
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PARAMS_PATH = PROJECT_ROOT / "params.yaml"
@@ -124,17 +130,19 @@ def setup_mlflow(params: dict[str, Any]) -> None:
     """
 
     if mlflow is None:
-        logger.warning("MLflow is not installed in the active environment; logging will be skipped.")
+        logger.warning("MLflow is not available. Skipping experiment tracking.")
         return
 
     tracking_uri = os.getenv("MLFLOW_TRACKING_URI", params["mlflow"]["tracking_uri"])
+    mlflow.set_tracking_uri(tracking_uri)
     try:
-        mlflow.set_tracking_uri(tracking_uri)
-        mlflow.search_experiments()
+        # Lightweight ping — just create/get the default experiment
+        mlflow.set_experiment("__connection_test__")
+        mlflow.set_experiment(params["mlflow"]["experiment_trend"])
         logger.info("Connected to MLflow server at: %s", tracking_uri)
     except Exception as exc:
         fallback_uri = "./mlruns"
-        logger.warning("MLflow server not reachable (%s). Falling back to local store: %s", exc, fallback_uri)
+        logger.warning("MLflow server not reachable (%s). Falling back to: %s", exc, fallback_uri)
         mlflow.set_tracking_uri(fallback_uri)
 
 
@@ -364,9 +372,18 @@ def _save_plots(regime_type: str, model: Any, feature_names: list[str], x_test: 
     plt.close()
 
     return importance_path, confusion_path
-
-
-def _log_to_mlflow(run, regime_type: str, model: Any, scaler: StandardScaler, importance_path: Path, confusion_path: Path, model_name: str, feature_columns: list[str], metrics: dict[str, float], extra_params: dict[str, Any]) -> tuple[str, Any]:
+def _log_to_mlflow(
+    run,
+    regime_type: str,
+    model: Any,
+    scaler: StandardScaler,
+    importance_path: Path,
+    confusion_path: Path,
+    model_name: str,
+    feature_columns: list[str],
+    metrics: dict[str, float],
+    extra_params: dict[str, Any],
+) -> tuple[str, Any]:
     """Log parameters, metrics, artifacts, and model registry entries to MLflow when available."""
 
     run_id = run.info.run_id
@@ -386,7 +403,47 @@ def _log_to_mlflow(run, regime_type: str, model: Any, scaler: StandardScaler, im
     mlflow.log_metric("train_test_f1_gap", abs(metrics.get("train_f1", 0.0) - metrics.get("test_f1", 0.0)))
     mlflow.log_artifact(str(importance_path))
     mlflow.log_artifact(str(confusion_path))
-    mlflow.sklearn.log_model(model, artifact_path=f"{regime_type}_model", registered_model_name=model_name)
+
+    try:
+        # Works on newer MLflow servers that support logged-models.
+        mlflow.sklearn.log_model(
+            model,
+            artifact_path=f"{regime_type}_model",
+            registered_model_name=model_name,
+        )
+    except Exception as exc:
+        msg = str(exc)
+        if "/api/2.0/mlflow/logged-models" not in msg or "404" not in msg:
+            raise
+
+        logger.warning(
+            "Logged-models endpoint is unavailable; using save_model + log_artifacts + create_model_version for %s",
+            model_name,
+        )
+
+        import tempfile
+
+        with tempfile.TemporaryDirectory(prefix=f"{regime_type}_mlflow_model_") as tmp_dir:
+            local_model_dir = Path(tmp_dir) / "model"
+
+            # Save model locally first, then log that directory into the run.
+            mlflow.sklearn.save_model(model, path=str(local_model_dir))
+            mlflow.log_artifacts(str(local_model_dir), artifact_path=f"{regime_type}_model")
+
+            client = MlflowClient()
+
+            # Ensure the registered model exists before creating a version.
+            try:
+                client.get_registered_model(model_name)
+            except Exception:
+                client.create_registered_model(model_name)
+
+            mv = client.create_model_version(
+                name=model_name,
+                source=f"runs:/{run_id}/{regime_type}_model",
+                run_id=run_id,
+            )
+            model_version = mv.version
 
     scaler_path = MODELS_DIR / f"{regime_type}_scaler.pkl"
     joblib.dump(scaler, scaler_path)
@@ -410,6 +467,51 @@ def _log_to_mlflow(run, regime_type: str, model: Any, scaler: StandardScaler, im
             logger.warning("Could not set model alias for %s: %s", model_name, exc)
 
     return run_id, model_version
+
+# def _log_to_mlflow(run, regime_type: str, model: Any, scaler: StandardScaler, importance_path: Path, confusion_path: Path, model_name: str, feature_columns: list[str], metrics: dict[str, float], extra_params: dict[str, Any]) -> tuple[str, Any]:
+#     """Log parameters, metrics, artifacts, and model registry entries to MLflow when available."""
+
+#     run_id = run.info.run_id
+#     model_version = None
+
+#     if mlflow is None:
+#         return run_id, model_version
+
+#     mlflow.set_tag("regime_type", regime_type)
+#     try:
+#         git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PROJECT_ROOT).decode().strip()
+#     except Exception:
+#         git_commit = "unknown"
+#     mlflow.set_tag("git_commit", git_commit)
+#     mlflow.log_params({**extra_params, "feature_count": len(feature_columns)})
+#     mlflow.log_metrics(metrics)
+#     mlflow.log_metric("train_test_f1_gap", abs(metrics.get("train_f1", 0.0) - metrics.get("test_f1", 0.0)))
+#     mlflow.log_artifact(str(importance_path))
+#     mlflow.log_artifact(str(confusion_path))
+#     mlflow.sklearn.log_model(model, artifact_path=f"{regime_type}_model", registered_model_name=model_name)
+
+#     scaler_path = MODELS_DIR / f"{regime_type}_scaler.pkl"
+#     joblib.dump(scaler, scaler_path)
+#     mlflow.log_artifact(str(scaler_path))
+
+#     feature_path = MODELS_DIR / f"{regime_type}_feature_columns.json"
+#     with feature_path.open("w", encoding="utf-8") as handle:
+#         json.dump(feature_columns, handle, indent=2)
+#     mlflow.log_artifact(str(feature_path))
+
+#     if MlflowClient is not None:
+#         try:
+#             client = MlflowClient()
+#             versions = client.search_model_versions(f"name='{model_name}'")
+#             latest = sorted(versions, key=lambda v: int(v.version), reverse=True)
+#             if latest:
+#                 client.set_registered_model_alias(model_name, "production", latest[0].version)
+#                 logger.info("Model %s v%s -> alias 'production'", model_name, latest[0].version)
+#                 model_version = latest[0].version
+#         except Exception as exc:
+#             logger.warning("Could not set model alias for %s: %s", model_name, exc)
+
+#     return run_id, model_version
 
 
 def train_single_regime(regime_type: str, features_path: Path, label_col: str, experiment_name: str, model_name: str, model_params: dict[str, Any]) -> dict[str, Any]:

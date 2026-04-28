@@ -232,6 +232,7 @@ def download_ticker(ticker: str, start: str, end: str, save_path: Path | str) ->
     for attempt in range(1, DOWNLOAD_RETRIES + 1):
         try:
             frame = yf.download(ticker, start=start, end=end, progress=False, auto_adjust=False, actions=False)
+            # Flatten yfinance MultiIndex columns
             if isinstance(frame.columns, pd.MultiIndex):
                 frame.columns = frame.columns.get_level_values(0)
             # Also drop any duplicate columns that can appear after flattening

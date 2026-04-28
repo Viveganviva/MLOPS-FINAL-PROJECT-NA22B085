@@ -57,3 +57,35 @@
 2026-04-28 19:37:57 | INFO     | [bull_bear] Loaded feature frame (3223, 37)
 2026-04-28 19:37:57 | INFO     | [bull_bear] Label distribution: {'Bull': 3149, 'Bear': 74}
 2026-04-28 19:37:57 | WARNING  | xgboost unavailable; falling back to RandomForestClassifier.
+2026-04-28 20:50:13 | WARNING  | MLflow is not installed in the active environment; logging will be skipped.
+2026-04-28 20:50:13 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 20:50:13 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 20:50:13 | INFO     | [trend] Dropped 1119 Neutral rows -> 1954 rows remain for binary training
+2026-04-28 20:50:13 | WARNING  | xgboost unavailable; falling back to RandomForestClassifier.
+2026-04-28 20:50:14 | INFO     | [vol] Loaded feature frame (3252, 23)
+2026-04-28 20:50:14 | INFO     | [vol] Label distribution: {'LowVol': 1892, 'HighVol': 1360}
+2026-04-28 20:50:14 | WARNING  | xgboost unavailable; falling back to RandomForestClassifier.
+2026-04-28 20:50:15 | INFO     | [bull_bear] Loaded feature frame (3223, 37)
+2026-04-28 20:50:15 | INFO     | [bull_bear] Label distribution: {'Bull': 3149, 'Bear': 74}
+2026-04-28 20:50:15 | WARNING  | xgboost unavailable; falling back to RandomForestClassifier.
+2026-04-28 21:27:03 | INFO     | Connected to MLflow server at: http://localhost:5000
+2026-04-28 21:27:03 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 21:27:03 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 21:27:03 | INFO     | [trend] Dropped 1119 Neutral rows -> 1954 rows remain for binary training
+2026-04-28 21:42:01 | INFO     | Connected to MLflow server at: http://localhost:5000
+2026-04-28 21:42:01 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 21:42:01 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 21:42:01 | INFO     | [trend] Dropped 1119 Neutral rows -> 1954 rows remain for binary training
+2026-04-28 21:42:02 | WARNING  | Logged-models endpoint is unavailable; using save_model + log_artifacts + create_model_version for TrendRegimeModel
+2026-04-28 21:42:12 | INFO     | Model TrendRegimeModel v1 -> alias 'production'
+2026-04-28 21:42:12 | INFO     | MLflow run ID: a49b6572add243f4b788b72e374560bf
+2026-04-28 21:42:12 | INFO     | [vol] Loaded feature frame (3252, 23)
+2026-04-28 21:42:12 | INFO     | [vol] Label distribution: {'LowVol': 1892, 'HighVol': 1360}
+2026-04-28 21:42:14 | WARNING  | Logged-models endpoint is unavailable; using save_model + log_artifacts + create_model_version for VolatilityRegimeModel
+2026-04-28 21:42:18 | INFO     | Model VolatilityRegimeModel v1 -> alias 'production'
+2026-04-28 21:42:18 | INFO     | MLflow run ID: 9a108ad779cb44e3b9e1acaef06abc61
+2026-04-28 21:42:18 | INFO     | [bull_bear] Loaded feature frame (3223, 37)
+2026-04-28 21:42:18 | INFO     | [bull_bear] Label distribution: {'Bull': 3149, 'Bear': 74}
+2026-04-28 21:42:20 | WARNING  | Logged-models endpoint is unavailable; using save_model + log_artifacts + create_model_version for BullBearRegimeModel
+2026-04-28 21:42:24 | INFO     | Model BullBearRegimeModel v1 -> alias 'production'
+2026-04-28 21:42:24 | INFO     | MLflow run ID: 5cb709498f2f4fbdb4b540691bcb6e0e

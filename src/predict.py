@@ -15,11 +15,14 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
-try:  # pragma: no cover - optional dependency guard
+try:
     import mlflow
     import mlflow.sklearn
-except Exception:  # pragma: no cover - runtime fallback when MLflow is unavailable
-    mlflow = None  # type: ignore[assignment]
+except ImportError as _mlflow_err:
+    import sys, traceback
+    print(f"[ERROR] MLflow import failed in predict.py: {_mlflow_err}", file=sys.stderr)
+    traceback.print_exc()
+    mlflow = None
 
 from src import feature_engineering
 
@@ -114,14 +117,23 @@ def load_model(regime_type: str):
         return joblib.load(MODELS_DIR / f"{regime_type}_model.pkl")
 
 
+# def _flatten_columns(frame: pd.DataFrame) -> pd.DataFrame:
+#     """Flatten yfinance MultiIndex columns into a single level when needed."""
+
+#     result = frame.copy()
+#     if isinstance(result.columns, pd.MultiIndex):
+#         result.columns = ["_".join(str(part) for part in column if part) for column in result.columns]
+#     return result
+
 def _flatten_columns(frame: pd.DataFrame) -> pd.DataFrame:
-    """Flatten yfinance MultiIndex columns into a single level when needed."""
-
-    result = frame.copy()
-    if isinstance(result.columns, pd.MultiIndex):
-        result.columns = ["_".join(str(part) for part in column if part) for column in result.columns]
-    return result
-
+    """Flatten yfinance MultiIndex columns into ['Close', 'Open', ...]."""
+    if frame is None or not hasattr(frame, "columns"):
+        return frame
+    if isinstance(frame.columns, pd.MultiIndex):
+        frame = frame.copy()
+        frame.columns = frame.columns.get_level_values(0)
+        frame = frame.loc[:, ~frame.columns.duplicated()]
+    return frame
 
 def fetch_recent_data(ticker: str, lookback_days: int = 300, regime_type: str | None = None, as_of_date: str | None = None) -> dict[str, pd.DataFrame]:
     """Download recent market data needed for inference."""
@@ -143,18 +155,16 @@ def fetch_recent_data(ticker: str, lookback_days: int = 300, regime_type: str | 
         data = yf.download(symbol, start=start, end=end, progress=False, auto_adjust=False, actions=False)
         # yfinance >= 0.2.18 returns MultiIndex columns like ('Close', 'SPY')
         # when downloading even a single ticker. Flatten them to simple names.
-        if isinstance(data.columns, pd.MultiIndex):
-            data.columns = data.columns.get_level_values(0)
-        # Also drop any duplicate columns that can appear after flattening
-        data = data.loc[:, ~data.columns.duplicated()]
-        data = _flatten_columns(data)
+        data = feature_engineering._ensure_flat_ohlcv(data)
+        data = feature_engineering._flatten_columns(data)
+        data = feature_engineering._normalise_ohlcv(data)        
         if data.empty:
             raise ValueError(f"No data returned for {symbol}")
         data.index = pd.to_datetime(data.index)
         frames[symbol] = data.tail(lookback_days)
         logger.info("[FETCH] %s: %d rows, latest date: %s", symbol, len(frames[symbol]), frames[symbol].index.max())
 
-    return frames
+        return frames
 
 
 def _prepare_feature_row(feature_frame: pd.DataFrame, feature_columns: list[str]) -> tuple[pd.Series, pd.Timestamp]:

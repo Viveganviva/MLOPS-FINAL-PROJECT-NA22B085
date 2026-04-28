@@ -1,0 +1,25 @@
+[2026-04-28T17:00:37.977+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: regime_pipeline.ingest_data manual__2026-04-28T17:00:34.712470+00:00 [queued]>
+[2026-04-28T17:00:37.983+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: regime_pipeline.ingest_data manual__2026-04-28T17:00:34.712470+00:00 [queued]>
+[2026-04-28T17:00:37.983+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 1
+[2026-04-28T17:00:37.996+0000] {taskinstance.py:2191} INFO - Executing <Task(BashOperator): ingest_data> on 2026-04-28 17:00:34.712470+00:00
+[2026-04-28T17:00:38.002+0000] {standard_task_runner.py:60} INFO - Started process 106 to run task
+[2026-04-28T17:00:38.015+0000] {standard_task_runner.py:87} INFO - Running: ['airflow', 'tasks', 'run', 'regime_pipeline', 'ingest_data', 'manual__2026-04-28T17:00:34.712470+00:00', '--job-id', '2', '--raw', '--subdir', 'DAGS_FOLDER/regime_pipeline_dag.py', '--cfg-path', '/tmp/tmp31vhjjut']
+[2026-04-28T17:00:38.021+0000] {standard_task_runner.py:88} INFO - Job 2: Subtask ingest_data
+[2026-04-28T17:00:38.096+0000] {task_command.py:423} INFO - Running <TaskInstance: regime_pipeline.ingest_data manual__2026-04-28T17:00:34.712470+00:00 [running]> on host 120020edd19a
+[2026-04-28T17:00:38.170+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='airflow' AIRFLOW_CTX_DAG_ID='regime_pipeline' AIRFLOW_CTX_TASK_ID='ingest_data' AIRFLOW_CTX_EXECUTION_DATE='2026-04-28T17:00:34.712470+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-04-28T17:00:34.712470+00:00'
+[2026-04-28T17:00:38.171+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2026-04-28T17:00:38.173+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'python src/data_ingestion.py']
+[2026-04-28T17:00:38.184+0000] {subprocess.py:86} INFO - Output:
+[2026-04-28T17:00:38.219+0000] {subprocess.py:93} INFO - python: can't open file '/tmp/airflowtmpqk13phe7/src/data_ingestion.py': [Errno 2] No such file or directory
+[2026-04-28T17:00:38.222+0000] {subprocess.py:97} INFO - Command exited with return code 2
+[2026-04-28T17:00:38.230+0000] {taskinstance.py:2698} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 433, in _execute_task
+    result = execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/bash.py", line 212, in execute
+    raise AirflowException(
+airflow.exceptions.AirflowException: Bash command failed. The command returned a non-zero exit code 2.
+[2026-04-28T17:00:38.233+0000] {taskinstance.py:1138} INFO - Marking task as FAILED. dag_id=regime_pipeline, task_id=ingest_data, execution_date=20260428T170034, start_date=20260428T170037, end_date=20260428T170038
+[2026-04-28T17:00:38.240+0000] {standard_task_runner.py:107} ERROR - Failed to execute job 2 for task ingest_data (Bash command failed. The command returned a non-zero exit code 2.; 106)
+[2026-04-28T17:00:38.266+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 1
+[2026-04-28T17:00:38.274+0000] {taskinstance.py:3280} INFO - 0 downstream tasks scheduled from follow-on schedule check
