@@ -16,3 +16,15 @@
 2026-04-28 15:33:54 | INFO     | Saved baseline stats for trend to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
 2026-04-28 15:33:54 | INFO     | Saved baseline stats for vol to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
 2026-04-28 15:33:54 | INFO     | Saved baseline stats for bull_bear to C:\Viva files\Sem 8\MLOPS\Final Project\data\baselines\feature_baselines.json
+2026-04-28 20:56:32 | INFO     | [API] retrain triggered by airflow_schedule -> {'status': 'started', 'thread_id': 135964789823168}
+2026-04-28 20:56:32 | INFO     | [API] POST /retrain -> 200 in 81.7 ms
+2026-04-28 20:56:32 | WARNING  | [RETRAIN] Pipeline skipped because lock is active
+2026-04-28 20:56:32 | INFO     | Trend regime label distribution: {'Neutral': 1206, 'MeanReverting': 1194, 'Trending': 872}
+2026-04-28 20:56:32 | INFO     | Built trend feature frame with 3073 rows and 28 features
+2026-04-28 20:56:32 | INFO     | Volatility regime label distribution: {'LowVol': 1911, 'HighVol': 1361}
+2026-04-28 20:56:32 | INFO     | Built volatility feature frame with 3252 rows and 22 features
+2026-04-28 20:56:32 | INFO     | Bull/bear regime label distribution: {'Bull': 3198, 'Bear': 74}
+2026-04-28 20:56:32 | INFO     | Built bull/bear feature frame with 3223 rows and 36 features
+2026-04-28 20:56:33 | INFO     | Saved baseline stats for trend to /app/data/baselines/feature_baselines.json
+2026-04-28 20:56:33 | INFO     | Saved baseline stats for vol to /app/data/baselines/feature_baselines.json
+2026-04-28 20:56:33 | INFO     | Saved baseline stats for bull_bear to /app/data/baselines/feature_baselines.json

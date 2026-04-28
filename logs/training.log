@@ -89,3 +89,203 @@
 2026-04-28 21:42:20 | WARNING  | Logged-models endpoint is unavailable; using save_model + log_artifacts + create_model_version for BullBearRegimeModel
 2026-04-28 21:42:24 | INFO     | Model BullBearRegimeModel v1 -> alias 'production'
 2026-04-28 21:42:24 | INFO     | MLflow run ID: 5cb709498f2f4fbdb4b540691bcb6e0e
+2026-04-28 20:56:33 | INFO     | Connected to MLflow server at: http://mlflow:5000
+2026-04-28 20:56:33 | INFO     | [trend] Loaded feature frame (3073, 29)
+2026-04-28 20:56:33 | INFO     | [trend] Label distribution: {'MeanReverting': 1131, 'Neutral': 1119, 'Trending': 823}
+2026-04-28 20:56:33 | INFO     | [trend] Dropped 1119 Neutral rows -> 1954 rows remain for binary training
+2026-04-28 20:56:38 | INFO     | [API] GET /ready -> 200 in 0.4 ms
+2026-04-28 20:56:39 | WARNING  | Logged-models endpoint is unavailable; using save_model + log_artifacts + create_model_version for TrendRegimeModel
+2026-04-28 20:56:39 | INFO     | [API] GET /prediction-history -> 200 in 16.5 ms
+2026-04-28 20:56:43 | INFO     | Model TrendRegimeModel v2 -> alias 'production'
+2026-04-28 20:56:43 | INFO     | MLflow run ID: 5d2b97bce1184ecb8f49d87892fcb5cb
+2026-04-28 20:56:43 | INFO     | [vol] Loaded feature frame (3252, 23)
+2026-04-28 20:56:43 | INFO     | [vol] Label distribution: {'LowVol': 1892, 'HighVol': 1360}
+2026-04-28 20:56:46 | INFO     | [API] health check -> ok
+2026-04-28 20:56:46 | INFO     | [API] GET /health -> 200 in 18.2 ms
+2026-04-28 20:56:46 | INFO     | [API] GET /prediction-history -> 200 in 19.4 ms
+2026-04-28 20:56:47 | WARNING  | Logged-models endpoint is unavailable; using save_model + log_artifacts + create_model_version for VolatilityRegimeModel
+2026-04-28 20:56:49 | INFO     | [API] GET /service-health/mlflow -> 200 in 21.3 ms
+2026-04-28 20:56:49 | INFO     | [API] GET /service-health/airflow -> 200 in 22.3 ms
+2026-04-28 20:56:49 | INFO     | [API] GET /service-health/prometheus -> 200 in 26.6 ms
+2026-04-28 20:56:49 | INFO     | [API] GET /service-health/grafana -> 200 in 27.4 ms
+2026-04-28 20:56:49 | INFO     | [API] GET /prediction-history -> 200 in 28.1 ms
+2026-04-28 20:56:49 | INFO     | [API] GET /pipeline-status -> 200 in 13.3 ms
+2026-04-28 20:56:49 | INFO     | [API] GET /prediction-history -> 200 in 18.1 ms
+2026-04-28 20:56:50 | INFO     | Model VolatilityRegimeModel v2 -> alias 'production'
+2026-04-28 20:56:50 | INFO     | MLflow run ID: bfb7656801514baf9d0044c936072edb
+2026-04-28 20:56:50 | INFO     | [bull_bear] Loaded feature frame (3223, 37)
+2026-04-28 20:56:50 | INFO     | [bull_bear] Label distribution: {'Bull': 3149, 'Bear': 74}
+2026-04-28 20:56:54 | WARNING  | Logged-models endpoint is unavailable; using save_model + log_artifacts + create_model_version for BullBearRegimeModel
+2026-04-28 20:56:56 | INFO     | [API] GET /service-health/mlflow -> 200 in 5.7 ms
+2026-04-28 20:56:56 | INFO     | [API] GET /service-health/airflow -> 200 in 24.4 ms
+2026-04-28 20:56:56 | INFO     | [API] GET /service-health/prometheus -> 200 in 25.5 ms
+2026-04-28 20:56:56 | INFO     | [API] GET /service-health/grafana -> 200 in 6.2 ms
+2026-04-28 20:56:56 | INFO     | [API] GET /pipeline-status -> 200 in 13.5 ms
+2026-04-28 20:56:56 | INFO     | [API] GET /prediction-history -> 200 in 19.0 ms
+2026-04-28 20:56:57 | INFO     | Model BullBearRegimeModel v2 -> alias 'production'
+2026-04-28 20:56:57 | INFO     | MLflow run ID: 5f2f98a2d45c497fb4345090293b270f
+2026-04-28 20:56:57 | INFO     | [RETRAIN] Pipeline complete. Duration: 27.9 seconds
+2026-04-28 20:57:05 | INFO     | [API] GET /prediction-history -> 200 in 19.5 ms
+2026-04-28 20:57:10 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 20:57:16 | INFO     | [API] GET /prediction-history -> 200 in 17.0 ms
+2026-04-28 20:57:16 | INFO     | [API] health check -> ok
+2026-04-28 20:57:16 | INFO     | [API] GET /health -> 200 in 27.5 ms
+2026-04-28 20:57:16 | INFO     | [API] GET /prediction-history -> 200 in 28.4 ms
+2026-04-28 20:57:26 | INFO     | [API] GET /service-health/mlflow -> 200 in 27.0 ms
+2026-04-28 20:57:26 | INFO     | [API] GET /service-health/airflow -> 200 in 28.2 ms
+2026-04-28 20:57:26 | INFO     | [API] GET /service-health/prometheus -> 200 in 9.1 ms
+2026-04-28 20:57:26 | INFO     | [API] GET /service-health/grafana -> 200 in 31.3 ms
+2026-04-28 20:57:26 | INFO     | [API] GET /prediction-history -> 200 in 32.6 ms
+2026-04-28 20:57:26 | INFO     | [API] GET /pipeline-status -> 200 in 16.9 ms
+2026-04-28 20:57:26 | INFO     | [API] GET /prediction-history -> 200 in 25.6 ms
+2026-04-28 20:57:35 | INFO     | [API] GET /prediction-history -> 200 in 29.3 ms
+2026-04-28 20:57:41 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 20:57:46 | INFO     | [API] health check -> ok
+2026-04-28 20:57:46 | INFO     | [API] GET /prediction-history -> 200 in 22.2 ms
+2026-04-28 20:57:46 | INFO     | [API] GET /health -> 200 in 4.2 ms
+2026-04-28 20:57:46 | INFO     | [API] GET /prediction-history -> 200 in 26.2 ms
+2026-04-28 20:57:56 | INFO     | [API] GET /service-health/mlflow -> 200 in 28.2 ms
+2026-04-28 20:57:56 | INFO     | [API] GET /service-health/airflow -> 200 in 24.9 ms
+2026-04-28 20:57:56 | INFO     | [API] GET /service-health/prometheus -> 200 in 36.0 ms
+2026-04-28 20:57:56 | INFO     | [API] GET /service-health/grafana -> 200 in 37.8 ms
+2026-04-28 20:57:56 | INFO     | [API] GET /prediction-history -> 200 in 39.5 ms
+2026-04-28 20:57:56 | INFO     | [API] GET /pipeline-status -> 200 in 17.1 ms
+2026-04-28 20:57:56 | INFO     | [API] GET /prediction-history -> 200 in 23.9 ms
+2026-04-28 20:58:05 | INFO     | [API] GET /prediction-history -> 200 in 21.7 ms
+2026-04-28 20:58:13 | INFO     | [API] GET /ready -> 200 in 0.6 ms
+2026-04-28 20:58:16 | INFO     | [API] health check -> ok
+2026-04-28 20:58:16 | INFO     | [API] GET /health -> 200 in 1.5 ms
+2026-04-28 20:58:16 | INFO     | [API] GET /prediction-history -> 200 in 31.2 ms
+2026-04-28 20:58:17 | INFO     | [API] GET /prediction-history -> 200 in 22.2 ms
+2026-04-28 20:58:26 | INFO     | [API] GET /service-health/mlflow -> 200 in 6.0 ms
+2026-04-28 20:58:26 | INFO     | [API] GET /service-health/airflow -> 200 in 23.3 ms
+2026-04-28 20:58:26 | INFO     | [API] GET /service-health/prometheus -> 200 in 24.2 ms
+2026-04-28 20:58:26 | INFO     | [API] GET /service-health/grafana -> 200 in 24.8 ms
+2026-04-28 20:58:26 | INFO     | [API] GET /pipeline-status -> 200 in 16.4 ms
+2026-04-28 20:58:26 | INFO     | [API] GET /prediction-history -> 200 in 23.2 ms
+2026-04-28 20:58:44 | INFO     | [API] GET /ready -> 200 in 0.6 ms
+2026-04-28 20:58:56 | INFO     | [API] GET /service-health/mlflow -> 200 in 4.6 ms
+2026-04-28 20:58:56 | INFO     | [API] GET /service-health/airflow -> 200 in 16.3 ms
+2026-04-28 20:58:56 | INFO     | [API] GET /service-health/prometheus -> 200 in 10.5 ms
+2026-04-28 20:58:56 | INFO     | [API] GET /service-health/grafana -> 200 in 12.5 ms
+2026-04-28 20:58:56 | INFO     | [API] GET /pipeline-status -> 200 in 15.3 ms
+2026-04-28 20:58:56 | INFO     | [API] GET /prediction-history -> 200 in 26.4 ms
+2026-04-28 20:59:16 | INFO     | [API] GET /ready -> 200 in 0.6 ms
+2026-04-28 20:59:17 | INFO     | [API] GET /prediction-history -> 200 in 29.8 ms
+2026-04-28 20:59:17 | INFO     | [API] health check -> ok
+2026-04-28 20:59:18 | INFO     | [API] GET /health -> 200 in 97.3 ms
+2026-04-28 20:59:18 | INFO     | [API] GET /prediction-history -> 200 in 98.4 ms
+2026-04-28 20:59:26 | INFO     | [API] GET /service-health/mlflow -> 200 in 5.2 ms
+2026-04-28 20:59:26 | INFO     | [API] GET /service-health/airflow -> 200 in 19.7 ms
+2026-04-28 20:59:26 | INFO     | [API] GET /service-health/prometheus -> 200 in 9.5 ms
+2026-04-28 20:59:26 | INFO     | [API] GET /service-health/grafana -> 200 in 11.2 ms
+2026-04-28 20:59:26 | INFO     | [API] GET /pipeline-status -> 200 in 18.0 ms
+2026-04-28 20:59:26 | INFO     | [API] GET /prediction-history -> 200 in 23.8 ms
+2026-04-28 20:59:47 | INFO     | [API] GET /ready -> 200 in 0.8 ms
+2026-04-28 20:59:56 | INFO     | [API] GET /service-health/mlflow -> 200 in 9.5 ms
+2026-04-28 20:59:56 | INFO     | [API] GET /service-health/airflow -> 200 in 43.3 ms
+2026-04-28 20:59:56 | INFO     | [API] GET /service-health/prometheus -> 200 in 44.4 ms
+2026-04-28 20:59:56 | INFO     | [API] GET /service-health/grafana -> 200 in 8.2 ms
+2026-04-28 20:59:56 | INFO     | [API] GET /pipeline-status -> 200 in 24.0 ms
+2026-04-28 20:59:56 | INFO     | [API] GET /prediction-history -> 200 in 25.0 ms
+2026-04-28 21:00:16 | INFO     | [API] health check -> ok
+2026-04-28 21:00:16 | INFO     | [API] GET /health -> 200 in 4.6 ms
+2026-04-28 21:00:16 | INFO     | [API] GET /prediction-history -> 200 in 62.1 ms
+2026-04-28 21:00:16 | INFO     | [API] GET /prediction-history -> 200 in 63.1 ms
+2026-04-28 21:00:19 | INFO     | [API] GET /ready -> 200 in 0.4 ms
+2026-04-28 21:00:51 | INFO     | [API] GET /ready -> 200 in 0.6 ms
+2026-04-28 21:01:16 | INFO     | [API] GET /service-health/mlflow -> 200 in 46.7 ms
+2026-04-28 21:01:16 | INFO     | [API] GET /service-health/airflow -> 200 in 48.2 ms
+2026-04-28 21:01:16 | INFO     | [API] GET /service-health/prometheus -> 200 in 25.7 ms
+2026-04-28 21:01:16 | INFO     | [API] GET /service-health/grafana -> 200 in 26.9 ms
+2026-04-28 21:01:16 | INFO     | [API] health check -> ok
+2026-04-28 21:01:16 | INFO     | [API] GET /prediction-history -> 200 in 70.7 ms
+2026-04-28 21:01:16 | INFO     | [API] GET /health -> 200 in 71.7 ms
+2026-04-28 21:01:16 | INFO     | [API] GET /prediction-history -> 200 in 73.0 ms
+2026-04-28 21:01:16 | INFO     | [API] GET /pipeline-status -> 200 in 19.4 ms
+2026-04-28 21:01:16 | INFO     | [API] GET /prediction-history -> 200 in 23.8 ms
+2026-04-28 21:01:22 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 21:01:54 | INFO     | [API] GET /ready -> 200 in 0.6 ms
+2026-04-28 21:02:16 | INFO     | [API] GET /service-health/mlflow -> 200 in 8.3 ms
+2026-04-28 21:02:16 | INFO     | [API] GET /service-health/airflow -> 200 in 48.1 ms
+2026-04-28 21:02:16 | INFO     | [API] health check -> ok
+2026-04-28 21:02:16 | INFO     | [API] GET /service-health/prometheus -> 200 in 24.8 ms
+2026-04-28 21:02:16 | INFO     | [API] GET /service-health/grafana -> 200 in 18.4 ms
+2026-04-28 21:02:16 | INFO     | [API] GET /health -> 200 in 19.5 ms
+2026-04-28 21:02:17 | INFO     | [API] GET /prediction-history -> 200 in 71.9 ms
+2026-04-28 21:02:17 | INFO     | [API] GET /prediction-history -> 200 in 73.8 ms
+2026-04-28 21:02:17 | INFO     | [API] GET /pipeline-status -> 200 in 23.3 ms
+2026-04-28 21:02:17 | INFO     | [API] GET /prediction-history -> 200 in 20.7 ms
+2026-04-28 21:02:25 | INFO     | [API] GET /ready -> 200 in 0.7 ms
+2026-04-28 21:02:57 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 21:03:17 | INFO     | [API] GET /service-health/mlflow -> 200 in 50.1 ms
+2026-04-28 21:03:17 | INFO     | [API] GET /service-health/airflow -> 200 in 51.8 ms
+2026-04-28 21:03:17 | INFO     | [API] health check -> ok
+2026-04-28 21:03:17 | INFO     | [API] GET /service-health/prometheus -> 200 in 69.7 ms
+2026-04-28 21:03:17 | INFO     | [API] GET /service-health/grafana -> 200 in 71.1 ms
+2026-04-28 21:03:17 | INFO     | [API] GET /health -> 200 in 71.3 ms
+2026-04-28 21:03:17 | INFO     | [API] GET /prediction-history -> 200 in 72.1 ms
+2026-04-28 21:03:17 | INFO     | [API] GET /prediction-history -> 200 in 27.7 ms
+2026-04-28 21:03:17 | INFO     | [API] GET /pipeline-status -> 200 in 16.7 ms
+2026-04-28 21:03:17 | INFO     | [API] GET /prediction-history -> 200 in 25.5 ms
+2026-04-28 21:03:28 | INFO     | [API] GET /ready -> 200 in 0.6 ms
+2026-04-28 21:04:00 | INFO     | [API] GET /ready -> 200 in 1.5 ms
+2026-04-28 21:04:17 | INFO     | [API] health check -> ok
+2026-04-28 21:04:17 | INFO     | [API] GET /health -> 200 in 4.7 ms
+2026-04-28 21:04:17 | INFO     | [API] GET /service-health/mlflow -> 200 in 16.1 ms
+2026-04-28 21:04:17 | INFO     | [API] GET /prediction-history -> 200 in 65.9 ms
+2026-04-28 21:04:17 | INFO     | [API] GET /prediction-history -> 200 in 75.0 ms
+2026-04-28 21:04:17 | INFO     | [API] GET /service-health/airflow -> 200 in 49.3 ms
+2026-04-28 21:04:17 | INFO     | [API] GET /service-health/prometheus -> 200 in 50.5 ms
+2026-04-28 21:04:17 | INFO     | [API] GET /service-health/grafana -> 200 in 51.6 ms
+2026-04-28 21:04:17 | INFO     | [API] GET /pipeline-status -> 200 in 15.3 ms
+2026-04-28 21:04:17 | INFO     | [API] GET /prediction-history -> 200 in 22.1 ms
+2026-04-28 21:04:32 | INFO     | [API] GET /ready -> 200 in 0.3 ms
+2026-04-28 21:05:03 | INFO     | [API] GET /ready -> 200 in 0.6 ms
+2026-04-28 21:05:17 | INFO     | [API] health check -> ok
+2026-04-28 21:05:17 | INFO     | [API] GET /health -> 200 in 6.1 ms
+2026-04-28 21:05:17 | INFO     | [API] GET /service-health/mlflow -> 200 in 87.1 ms
+2026-04-28 21:05:17 | INFO     | [API] GET /service-health/airflow -> 200 in 88.1 ms
+2026-04-28 21:05:17 | INFO     | [API] GET /prediction-history -> 200 in 88.9 ms
+2026-04-28 21:05:17 | INFO     | [API] GET /service-health/prometheus -> 200 in 6.6 ms
+2026-04-28 21:05:17 | INFO     | [API] GET /service-health/grafana -> 200 in 44.1 ms
+2026-04-28 21:05:17 | INFO     | [API] GET /prediction-history -> 200 in 45.9 ms
+2026-04-28 21:05:17 | INFO     | [API] GET /pipeline-status -> 200 in 15.0 ms
+2026-04-28 21:05:17 | INFO     | [API] GET /prediction-history -> 200 in 29.7 ms
+2026-04-28 21:05:35 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 21:06:06 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 21:06:17 | INFO     | [API] GET /service-health/mlflow -> 200 in 32.6 ms
+2026-04-28 21:06:17 | INFO     | [API] GET /service-health/airflow -> 200 in 26.0 ms
+2026-04-28 21:06:17 | INFO     | [API] health check -> ok
+2026-04-28 21:06:17 | INFO     | [API] GET /service-health/grafana -> 200 in 81.6 ms
+2026-04-28 21:06:17 | INFO     | [API] GET /service-health/prometheus -> 200 in 83.0 ms
+2026-04-28 21:06:17 | INFO     | [API] GET /prediction-history -> 200 in 84.4 ms
+2026-04-28 21:06:17 | INFO     | [API] GET /health -> 200 in 84.6 ms
+2026-04-28 21:06:17 | INFO     | [API] GET /prediction-history -> 200 in 30.6 ms
+2026-04-28 21:06:17 | INFO     | [API] GET /pipeline-status -> 200 in 36.9 ms
+2026-04-28 21:06:17 | INFO     | [API] GET /prediction-history -> 200 in 26.2 ms
+2026-04-28 21:06:38 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 21:07:09 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 21:07:17 | INFO     | [API] GET /service-health/mlflow -> 200 in 7.3 ms
+2026-04-28 21:07:17 | INFO     | [API] health check -> ok
+2026-04-28 21:07:17 | INFO     | [API] GET /health -> 200 in 3.4 ms
+2026-04-28 21:07:17 | INFO     | [API] GET /service-health/airflow -> 200 in 59.1 ms
+2026-04-28 21:07:17 | INFO     | [API] GET /prediction-history -> 200 in 59.9 ms
+2026-04-28 21:07:17 | INFO     | [API] GET /service-health/prometheus -> 200 in 60.3 ms
+2026-04-28 21:07:17 | INFO     | [API] GET /service-health/grafana -> 200 in 32.9 ms
+2026-04-28 21:07:17 | INFO     | [API] GET /prediction-history -> 200 in 26.2 ms
+2026-04-28 21:07:17 | INFO     | [API] GET /pipeline-status -> 200 in 19.7 ms
+2026-04-28 21:07:17 | INFO     | [API] GET /prediction-history -> 200 in 20.3 ms
+2026-04-28 21:07:41 | INFO     | [API] GET /ready -> 200 in 0.5 ms
+2026-04-28 21:08:12 | INFO     | [API] GET /ready -> 200 in 1.5 ms
+2026-04-28 21:08:17 | INFO     | [API] health check -> ok
+2026-04-28 21:08:17 | INFO     | [API] GET /health -> 200 in 5.4 ms
+2026-04-28 21:08:17 | INFO     | [API] GET /service-health/prometheus -> 200 in 13.2 ms
+2026-04-28 21:08:17 | INFO     | [API] GET /service-health/airflow -> 200 in 81.8 ms
+2026-04-28 21:08:17 | INFO     | [API] GET /service-health/mlflow -> 200 in 81.9 ms
+2026-04-28 21:08:17 | INFO     | [API] GET /prediction-history -> 200 in 22.5 ms
+2026-04-28 21:08:17 | INFO     | [API] GET /service-health/grafana -> 200 in 30.2 ms
+2026-04-28 21:08:17 | INFO     | [API] GET /prediction-history -> 200 in 31.5 ms
+2026-04-28 21:08:17 | INFO     | [API] GET /pipeline-status -> 200 in 14.7 ms
+2026-04-28 21:08:17 | INFO     | [API] GET /prediction-history -> 200 in 22.7 ms
+2026-04-28 21:08:44 | INFO     | [API] GET /ready -> 200 in 0.5 ms
