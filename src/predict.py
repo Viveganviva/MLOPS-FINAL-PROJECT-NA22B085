@@ -164,7 +164,7 @@ def fetch_recent_data(ticker: str, lookback_days: int = 300, regime_type: str | 
         frames[symbol] = data.tail(lookback_days)
         logger.info("[FETCH] %s: %d rows, latest date: %s", symbol, len(frames[symbol]), frames[symbol].index.max())
 
-        return frames
+    return frames
 
 
 def _prepare_feature_row(feature_frame: pd.DataFrame, feature_columns: list[str]) -> tuple[pd.Series, pd.Timestamp]:

@@ -1,3 +1,5 @@
+# pytest tests/ -v --tb=short 2>&1 | Tee-Object docs/test_report.txt in powershell for better readability of test results.
+
 from __future__ import annotations
 
 import pytest
@@ -27,6 +29,7 @@ def client(monkeypatch):
         "regime_type": regime_type,
         "predicted_label": {"trend": "Trending", "vol": "LowVol", "bull_bear": "Bull"}[regime_type],
         "confidence": 0.91,
+        "confidence_level": "HIGH",
         "proba_class_0": 0.09,
         "proba_class_1": 0.91,
         "inference_date": "2024-01-02",

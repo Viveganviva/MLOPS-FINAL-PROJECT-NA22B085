@@ -224,9 +224,12 @@ def compute_rsi(series: pd.Series, period: int) -> pd.Series:
     avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
     avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
-    rs = avg_gain / avg_loss.replace(0, np.nan)
-    rsi = 100 - (100 / (1 + rs))
-    return rsi.rename("rsi")
+    # Handle edge cases: when avg_loss is 0 (no losses), RSI should be 100 (overbought)
+    # When avg_gain is 0 (no gains), RSI should be 0 (oversold)
+    rs = np.where(avg_loss == 0, np.inf, avg_gain / avg_loss)
+    rsi = np.where(avg_loss == 0, 100.0, np.where(avg_gain == 0, 0.0, 100 - (100 / (1 + rs))))
+    
+    return pd.Series(rsi, index=series.index, name="rsi")
 
 
 def compute_atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int) -> pd.Series:
