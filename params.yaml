@@ -11,6 +11,14 @@ data:
   baseline_dir: 'data/baselines'
   sim_dir: 'data/simulation'
 
+ingestion:
+  download_retries: 3
+  retry_sleep_seconds: 5
+  freshness_hours: 24
+  validation_tolerance_days: 10
+  log_format: '%(asctime)s | %(levelname)-8s | %(message)s'
+  log_datefmt: '%Y-%m-%d %H:%M:%S'
+
 features:
   short_window: 5
   mid_window: 20

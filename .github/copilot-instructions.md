@@ -24,3 +24,5 @@ conda list
 If you need to install packages, use:
 conda install ... or python -m pip install ...
 inside the active ai_env terminal only.
+
+Working of code is the priority.

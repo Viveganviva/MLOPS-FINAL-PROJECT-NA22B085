@@ -1,30 +1,135 @@
-version: '3.9'
+version: '3.8'
 
 services:
+
   api:
     build:
       context: .
       dockerfile: Dockerfile.api
+    container_name: regime_api
     ports:
       - "8000:8000"
+      - "8001:8001"
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./mlruns:/app/mlruns
+      - ./logs:/app/logs
     environment:
-      - PYTHONUNBUFFERED=1
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: on-failure
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    container_name: regime_frontend
     ports:
-      - "8080:80"
+      - "80:80"
+    depends_on:
+      - api
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.12.1
+    container_name: regime_mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlruns/mlflow.db
+      --default-artifact-root /mlruns/artifacts
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/health')\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   prometheus:
     image: prom/prometheus:latest
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    container_name: regime_prometheus
     ports:
       - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.3.0
+    container_name: regime_grafana
     ports:
       - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+
+  airflow:
+    image: apache/airflow:2.8.1-python3.10
+    container_name: regime_airflow
+    ports:
+      - "8080:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=regime_detection_secret_key_2024
+    volumes:
+      - ./airflow_dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - ./models:/opt/airflow/models
+      - ./logs:/opt/airflow/logs
+    command: >
+      bash -c "
+        airflow db migrate &&
+        airflow users create --username admin --password admin
+          --firstname Admin --lastname User --role Admin --email admin@example.com 2>/dev/null || true &&
+        airflow webserver --port 8080 &
+        airflow scheduler
+      "
+    restart: on-failure
+
+volumes:
+  grafana_data:
+
+# ─────────────────────────────────────────────
+# QUICK REFERENCE
+# Start all services:    docker-compose up --build
+# Start in background:   docker-compose up -d --build
+# View API logs:         docker-compose logs -f api
+# Rebuild just API:      docker-compose up --build api
+# Stop all:              docker-compose down
+# Stop + delete volumes: docker-compose down -v
+#
+# Service URLs:
+#   Frontend:  http://localhost:80
+#   API docs:  http://localhost:8000/docs
+#   MLflow:    http://localhost:5000
+#   Airflow:   http://localhost:8080  (admin/admin)
+#   Grafana:   http://localhost:3000  (admin/admin)
+#   Prometheus:http://localhost:9090
+# ─────────────────────────────────────────────

@@ -1,7 +1,5 @@
-FROM nginx:1.27-alpine
+FROM nginx:alpine
 
-WORKDIR /usr/share/nginx/html
-
-COPY frontend/ ./
+COPY frontend/ /usr/share/nginx/html/
 
 EXPOSE 80

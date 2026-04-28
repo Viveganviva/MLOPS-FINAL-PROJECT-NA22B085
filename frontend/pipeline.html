@@ -3,42 +3,564 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pipeline View</title>
+  <title>Pipeline Monitor</title>
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-alt: #0f1520;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #1f6feb;
+      --green: #3fb950;
+      --red: #f85149;
+      --orange: #d29922;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      min-height: 100vh;
-      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-      color: #eaf1fb;
-      background: linear-gradient(180deg, #0b1524 0%, #050a13 100%);
-      padding: 32px;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(31, 111, 235, 0.16), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(63, 185, 80, 0.12), transparent 24%),
+        linear-gradient(180deg, #0a0f17 0%, var(--bg) 100%);
+      color: var(--text);
     }
 
-    .grid {
+    a { color: inherit; text-decoration: none; }
+
+    .app {
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 40px;
       display: grid;
-      gap: 16px;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
     }
 
-    .card {
-      padding: 20px;
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      min-height: 160px;
+      background: rgba(22, 27, 34, 0.88);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+    .nav-left { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 42px; height: 42px; border-radius: 14px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(31,111,235,0.3), rgba(63,185,80,0.16));
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 1.2rem;
+    }
+    .brand-title { margin: 0; font-size: 1.02rem; }
+    .brand-sub { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
+    .nav-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .nav-links a {
+      padding: 9px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+    }
+    .nav-links a.active { color: var(--text); border-color: rgba(31,111,235,0.5); background: rgba(31,111,235,0.12); }
+
+    .hero, .section, .card, .panel, .status-card, .feed-item, .table-wrap, .error-banner {
+      background: rgba(22, 27, 34, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
     }
 
-    .card h2 { margin-top: 0; }
-    .card p { color: #93a4bb; line-height: 1.6; }
+    .hero {
+      padding: 26px;
+      display: grid;
+      gap: 14px;
+    }
+    .hero h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.2rem); }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.7; max-width: 72ch; }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+    }
+
+    .section { padding: 20px; }
+    .section h2, .section h3 { margin: 0; }
+    .subtle { color: var(--muted); margin-top: 6px; }
+
+    .dag {
+      width: 100%;
+      overflow-x: auto;
+      padding-top: 10px;
+    }
+
+    svg { width: 100%; min-width: 940px; height: 300px; }
+    .stage { cursor: pointer; transition: transform 160ms ease, filter 160ms ease; }
+    .stage:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .stage rect { fill: var(--panel-alt); stroke: rgba(255,255,255,0.14); stroke-width: 1.2; rx: 18; }
+    .stage.success rect { stroke: rgba(63,185,80,0.5); }
+    .stage.failed rect { stroke: rgba(248,81,73,0.55); }
+    .stage.never rect { stroke: rgba(139,148,158,0.45); }
+    .stage text { fill: var(--text); font-size: 18px; font-weight: 700; }
+    .stage .small { fill: var(--muted); font-size: 13px; font-weight: 500; }
+    .arrow { stroke: rgba(31,111,235,0.6); stroke-width: 3; fill: none; stroke-dasharray: 6 8; animation: flow 1.7s linear infinite; }
+    @keyframes flow { to { stroke-dashoffset: -28; } }
+
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .status-card {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .status-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .status-title { display: flex; align-items: center; gap: 10px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #6e7681; }
+    .status-dot.ok { background: var(--green); }
+    .status-dot.bad { background: var(--red); }
+    .status-dot.warn { background: var(--orange); }
+    .status-card p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .status-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .link-btn, .action-btn {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font: inherit;
+    }
+    .action-btn.primary { background: linear-gradient(135deg, var(--accent), #58a6ff); border: 0; }
+
+    .table-wrap { overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 13px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    th { color: var(--muted); font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    td { color: var(--text); }
+    .pill { display: inline-flex; align-items: center; padding: 7px 10px; border-radius: 999px; font-size: 0.8rem; }
+    .pill.green { background: rgba(63,185,80,0.14); color: #7ee787; }
+    .pill.red { background: rgba(248,81,73,0.14); color: #ff9590; }
+    .pill.orange { background: rgba(210,153,34,0.14); color: #f1c464; }
+    .pill.muted { background: rgba(255,255,255,0.04); color: #c9d1d9; }
+
+    .feed { display: grid; gap: 10px; max-height: 380px; overflow: auto; padding-right: 4px; }
+    .feed-item { padding: 14px 16px; display: grid; gap: 6px; }
+    .feed-item .meta { color: var(--muted); font-size: 0.84rem; display: flex; justify-content: space-between; gap: 12px; }
+    .feed-item .main { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+
+    .actions-grid { display: grid; gap: 12px; }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .inline-result {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: var(--muted);
+      white-space: pre-wrap;
+      min-height: 60px;
+    }
+
+    .error-banner {
+      display: none;
+      padding: 14px 18px;
+      border-color: rgba(248,81,73,0.4);
+      background: rgba(248,81,73,0.1);
+      color: #ffb4b1;
+    }
+
+    .stage-details { display: none; }
+    .stage-details.show { display: block; }
+
+    @media (max-width: 1160px) {
+      .grid-two { grid-template-columns: 1fr; }
+      .health-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <h1>Pipeline View</h1>
-  <div class="grid">
-    <section class="card"><h2>Ingest</h2><p>Historical prices and benchmarks are staged from raw market feeds.</p></section>
-    <section class="card"><h2>Engineer</h2><p>Trend, volatility, and structural features are derived on standardized windows.</p></section>
-    <section class="card"><h2>Train</h2><p>Separate models are fit for the trend, volatility, and bull-bear regimes.</p></section>
-    <section class="card"><h2>Serve</h2><p>Live inference is exposed through the API and tracked in the simulation log.</p></section>
+  <div class="app">
+    <nav class="nav">
+      <div class="nav-left">
+        <div class="brand-icon">⚙️</div>
+        <div>
+          <p class="brand-title">Pipeline Monitor</p>
+          <p class="brand-sub">MLOps infrastructure and model registry status</p>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a href="/">🏠 Predictions</a>
+        <a class="active" href="/pipeline">⚙️ Pipeline</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <h1>Pipeline DAG and deployment health.</h1>
+      <p>
+        This screen tracks the four-stage pipeline, the supporting services, recent predictions, and the main control actions used during operations.
+      </p>
+    </section>
+
+    <div id="errorBanner" class="error-banner">⚠️ API unavailable. Make sure docker-compose up is running.</div>
+
+    <div class="grid-two">
+      <section class="section">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap;">
+          <div>
+            <h2>Pipeline DAG</h2>
+            <div class="subtle">Data Ingestion → Feature Engineering → Model Training → Model Serving</div>
+          </div>
+          <div class="pill muted">Click a stage for details</div>
+        </div>
+        <div class="dag">
+          <svg viewBox="0 0 1180 300" aria-label="Pipeline DAG visualization">
+            <defs>
+              <marker id="arrowHead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(31,111,235,0.75)"></path>
+              </marker>
+            </defs>
+            <path class="arrow" d="M 210 150 L 345 150" marker-end="url(#arrowHead)"></path>
+            <path class="arrow" d="M 470 150 L 605 150" marker-end="url(#arrowHead)"></path>
+            <path class="arrow" d="M 730 150 L 865 150" marker-end="url(#arrowHead)"></path>
+
+            <g class="stage never" data-stage="ingest" transform="translate(40, 78)">
+              <rect width="170" height="144"></rect>
+              <text x="20" y="44">Data Ingestion</text>
+              <text class="small" x="20" y="76">Last run: loading…</text>
+              <text class="small" x="20" y="102">Status: pending</text>
+            </g>
+
+            <g class="stage never" data-stage="featurize" transform="translate(300, 78)">
+              <rect width="170" height="144"></rect>
+              <text x="20" y="44">Feature Engineering</text>
+              <text class="small" x="20" y="76">Last run: loading…</text>
+              <text class="small" x="20" y="102">Status: pending</text>
+            </g>
+
+            <g class="stage never" data-stage="train" transform="translate(560, 78)">
+              <rect width="170" height="144"></rect>
+              <text x="20" y="44">Model Training</text>
+              <text class="small" x="20" y="76">Last run: loading…</text>
+              <text class="small" x="20" y="102">Status: pending</text>
+            </g>
+
+            <g class="stage never" data-stage="serve" transform="translate(820, 78)">
+              <rect width="170" height="144"></rect>
+              <text x="20" y="44">Model Serving</text>
+              <text class="small" x="20" y="76">Last run: loading…</text>
+              <text class="small" x="20" y="102">Status: pending</text>
+            </g>
+          </svg>
+        </div>
+        <div id="stageDetails" class="stage-details inline-result"></div>
+      </section>
+
+      <section class="section">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap;">
+          <div>
+            <h2>Component Health</h2>
+            <div class="subtle">Live ping status for the supporting services.</div>
+          </div>
+        </div>
+        <div class="health-grid" style="margin-top: 14px;">
+          <div class="status-card">
+            <div class="status-top">
+              <div class="status-title"><span id="mlflowDot" class="status-dot"></span><strong>MLflow</strong></div>
+              <span id="mlflowStatus" class="pill muted">checking</span>
+            </div>
+            <p>Model registry and experiment tracking.</p>
+            <div class="status-actions"><a class="link-btn" href="http://localhost:5000" target="_blank" rel="noreferrer">Open</a></div>
+          </div>
+          <div class="status-card">
+            <div class="status-top">
+              <div class="status-title"><span id="airflowDot" class="status-dot"></span><strong>Airflow</strong></div>
+              <span id="airflowStatus" class="pill muted">checking</span>
+            </div>
+            <p>Workflow orchestration for ingestion and retraining.</p>
+            <div class="status-actions"><a class="link-btn" href="http://localhost:8080" target="_blank" rel="noreferrer">Open</a></div>
+          </div>
+          <div class="status-card">
+            <div class="status-top">
+              <div class="status-title"><span id="prometheusDot" class="status-dot"></span><strong>Prometheus</strong></div>
+              <span id="prometheusStatus" class="pill muted">checking</span>
+            </div>
+            <p>Metrics scraping and alert rule evaluation.</p>
+            <div class="status-actions"><a class="link-btn" href="http://localhost:9090" target="_blank" rel="noreferrer">Open</a></div>
+          </div>
+          <div class="status-card">
+            <div class="status-top">
+              <div class="status-title"><span id="grafanaDot" class="status-dot"></span><strong>Grafana</strong></div>
+              <span id="grafanaStatus" class="pill muted">checking</span>
+            </div>
+            <p>Dashboarding for prediction, drift, and system health.</p>
+            <div class="status-actions"><a class="link-btn" href="http://localhost:3000" target="_blank" rel="noreferrer">Open</a></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid-two">
+      <section class="section table-wrap">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap; padding:20px 20px 0;">
+          <div>
+            <h2>Model Registry</h2>
+            <div class="subtle">Pulled from /pipeline-status and MLflow metadata.</div>
+          </div>
+          <div class="pill muted" id="registryRefresh">Updating…</div>
+        </div>
+        <div style="overflow:auto; padding: 12px 0 4px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Model Name</th>
+                <th>Current Version</th>
+                <th>Stage</th>
+                <th>Last Trained</th>
+                <th>Test F1</th>
+              </tr>
+            </thead>
+            <tbody id="registryBody">
+              <tr><td colspan="5" style="color: var(--muted);">Loading registry…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap;">
+          <div>
+            <h2>Recent Predictions</h2>
+            <div class="subtle">Live feed from the prediction history endpoint.</div>
+          </div>
+        </div>
+        <div id="predictionFeed" class="feed" style="margin-top: 14px;"></div>
+      </section>
+    </div>
+
+    <section class="section">
+      <div style="display:flex; justify-content:space-between; gap:12px; align-items:end; flex-wrap:wrap;">
+        <div>
+          <h2>Quick Actions</h2>
+          <div class="subtle">Trigger retraining, inspect drift, or run ingestion on demand.</div>
+        </div>
+      </div>
+      <div class="actions-grid" style="margin-top: 14px;">
+        <div class="action-row">
+          <button class="action-btn primary" id="retrainBtn" type="button">Trigger Retraining</button>
+          <button class="action-btn" id="driftBtn" type="button">Check Drift</button>
+          <button class="action-btn" id="ingestBtn" type="button">Run Ingestion</button>
+        </div>
+        <div id="actionResult" class="inline-result">No action has been triggered yet.</div>
+      </div>
+    </section>
   </div>
+
+  <script>
+    const API_URL = 'http://localhost:8000';
+    const HEALTH_TARGETS = [
+      ['mlflow', 'http://localhost:5000'],
+      ['airflow', 'http://localhost:8080'],
+      ['prometheus', 'http://localhost:9090'],
+      ['grafana', 'http://localhost:3000']
+    ];
+
+    // Displays an error banner when the API or a supporting service cannot be reached.
+    function showError(message) {
+      const banner = document.getElementById('errorBanner');
+      banner.textContent = message || '⚠️ API unavailable. Make sure docker-compose up is running.';
+      banner.style.display = 'block';
+    }
+
+    // Hides the top-level error banner once a successful request returns.
+    function hideError() {
+      document.getElementById('errorBanner').style.display = 'none';
+    }
+
+    // Converts a health state into a colored chip used across the page.
+    function statusPill(state) {
+      if (state === 'ok') return { cls: 'pill green', text: 'healthy' };
+      if (state === 'warn') return { cls: 'pill orange', text: 'degraded' };
+      return { cls: 'pill red', text: 'offline' };
+    }
+
+    // Updates one DAG stage box with the latest metadata from /pipeline-status.
+    function updateStage(stage, payload) {
+      const node = document.querySelector(`.stage[data-stage="${stage}"]`);
+      if (!node) return;
+      const label = node.querySelectorAll('text.small');
+      const statusText = payload.status || 'unknown';
+      node.classList.remove('success', 'failed', 'never');
+      node.classList.add(statusText === 'success' ? 'success' : statusText === 'failed' ? 'failed' : 'never');
+      label[0].textContent = `Last run: ${payload.last_run || 'never'}`;
+      label[1].textContent = `Status: ${statusText}`;
+    }
+
+    // Loads the pipeline status payload and refreshes the DAG and registry table.
+    async function refreshPipelineStatus() {
+      try {
+        const response = await fetch(`${API_URL}/pipeline-status`);
+        if (!response.ok) throw new Error('status unavailable');
+        const data = await response.json();
+
+        updateStage('ingest', { last_run: data.last_ingestion_time, status: data.last_ingestion_time ? 'success' : 'never' });
+        updateStage('featurize', { last_run: data.last_training_time, status: data.last_training_time ? 'success' : 'never' });
+        updateStage('train', { last_run: data.last_training_time, status: data.model_versions && Object.keys(data.model_versions).length ? 'success' : 'never' });
+        updateStage('serve', { last_run: data.last_drift_check, status: 'success' });
+
+        const registryBody = document.getElementById('registryBody');
+        const rows = Object.entries(data.model_versions || {}).map(([name, version]) => `
+          <tr>
+            <td>${name}</td>
+            <td>${version || 'n/a'}</td>
+            <td><span class="pill green">Production</span></td>
+            <td>${data.last_training_time || 'n/a'}</td>
+            <td>${data.model_metrics?.[name]?.test_f1?.toFixed ? data.model_metrics[name].test_f1.toFixed(3) : (data.model_metrics?.[name]?.test_f1 ?? 'n/a')}</td>
+          </tr>
+        `);
+        registryBody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="5" style="color: var(--muted);">No registered models reported yet.</td></tr>';
+        document.getElementById('registryRefresh').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+        hideError();
+      } catch (error) {
+        showError('⚠️ API unavailable. Make sure docker-compose up is running.');
+      }
+    }
+
+    // Pings a supporting container and updates its health dot and badge.
+    async function checkService(name, url) {
+      const dot = document.getElementById(`${name}Dot`);
+      const status = document.getElementById(`${name}Status`);
+      try {
+        const response = await fetch(`${API_URL}/service-health/${name}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        const healthy = Boolean(payload.reachable);
+        const state = healthy ? statusPill('ok') : statusPill('bad');
+        dot.className = `status-dot ${healthy ? 'ok' : 'bad'}`;
+        status.className = state.cls;
+        status.textContent = healthy ? `${state.text} • ${payload.status_code}` : 'offline';
+      } catch (error) {
+        dot.className = 'status-dot bad';
+        status.className = 'pill red';
+        status.textContent = 'offline';
+      }
+    }
+
+    // Refreshes the recent predictions feed from the API history endpoint.
+    async function refreshPredictionFeed() {
+      try {
+        const response = await fetch(`${API_URL}/prediction-history?limit=10`);
+        if (!response.ok) throw new Error('history unavailable');
+        const payload = await response.json();
+        const feed = document.getElementById('predictionFeed');
+        feed.innerHTML = (payload.rows || []).slice().reverse().map((row) => {
+          const label = String(row.predicted_label || 'Unknown');
+          const color = label.toLowerCase().includes('bull') || label.toLowerCase().includes('trend') || label.toLowerCase().includes('lowvol') ? 'green' : label.toLowerCase().includes('bear') || label.toLowerCase().includes('highvol') || label.toLowerCase().includes('mean') ? 'red' : 'orange';
+          return `
+            <div class="feed-item">
+              <div class="main">
+                <strong>${row.ticker || 'TICKER'} • ${row.regime_type || 'regime'}</strong>
+                <span class="pill ${color}">${label}</span>
+              </div>
+              <div class="meta"><span>${row.timestamp || ''}</span><span>${Number(row.confidence || 0).toFixed(2)}</span></div>
+            </div>
+          `;
+        }).join('') || '<div class="feed-item"><strong>No predictions yet.</strong><div class="meta"><span>Run the simulation or predictions first.</span></div></div>';
+      } catch (error) {
+        document.getElementById('predictionFeed').innerHTML = '<div class="feed-item"><strong>Prediction feed unavailable.</strong><div class="meta"><span>Check the API service.</span></div></div>';
+      }
+    }
+
+    // Expands or collapses a stage detail panel when a DAG stage is clicked.
+    function bindStageDetails() {
+      document.querySelectorAll('.stage').forEach((node) => {
+        node.addEventListener('click', () => {
+          const stage = node.dataset.stage;
+          const details = document.getElementById('stageDetails');
+          const map = {
+            ingest: 'Ingestion downloads raw data, refreshes simulation data, and updates baselines.',
+            featurize: 'Feature engineering produces the training CSVs and baseline distributions used by drift monitoring.',
+            train: 'Training fits and registers the regime classifiers plus local artifacts.',
+            serve: 'Model serving loads the registry, serves predictions, and updates monitoring metrics.'
+          };
+          details.textContent = `${stage.toUpperCase()}: ${map[stage] || ''}`;
+          details.classList.add('show');
+        });
+      });
+    }
+
+    // Triggers the retraining endpoint and shows the returned status inline.
+    async function triggerRetraining() {
+      const output = document.getElementById('actionResult');
+      output.textContent = 'Triggering retraining...';
+      try {
+        const response = await fetch(`${API_URL}/retrain?triggered_by=manual`, { method: 'POST' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        output.textContent = JSON.stringify(payload, null, 2);
+      } catch (error) {
+        output.textContent = 'Retraining request failed. Check the API and model files.';
+      }
+    }
+
+    // Calls all three drift endpoints and renders the result inline for quick inspection.
+    async function checkDrift() {
+      const output = document.getElementById('actionResult');
+      output.textContent = 'Checking drift...';
+      try {
+        const regimes = ['trend', 'vol', 'bull_bear'];
+        const results = [];
+        for (const regime of regimes) {
+          const response = await fetch(`${API_URL}/drift/${regime}`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          results.push(await response.json());
+        }
+        output.textContent = results.map((item) => `${item.regime_type}: ${item.retrain_reason} (retrain=${item.retrain_recommended})`).join('\n');
+      } catch (error) {
+        output.textContent = 'Drift check failed. Confirm the models and prediction history exist.';
+      }
+    }
+
+    // Invokes the API ingestion endpoint from the pipeline operations panel.
+    async function runIngestion() {
+      const output = document.getElementById('actionResult');
+      output.textContent = 'Starting ingestion...';
+      try {
+        const response = await fetch(`${API_URL}/pipeline/ingest`, { method: 'POST' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        output.textContent = JSON.stringify(payload, null, 2);
+      } catch (error) {
+        output.textContent = 'Ingestion request failed. Check the API service.';
+      }
+    }
+
+    // Checks all supporting service health endpoints and refreshes the dashboard state.
+    async function refreshAll() {
+      await Promise.all(HEALTH_TARGETS.map(([name, url]) => checkService(name, url)));
+      await refreshPipelineStatus();
+      await refreshPredictionFeed();
+    }
+
+    document.getElementById('retrainBtn').addEventListener('click', triggerRetraining);
+    document.getElementById('driftBtn').addEventListener('click', checkDrift);
+    document.getElementById('ingestBtn').addEventListener('click', runIngestion);
+    bindStageDetails();
+    refreshAll();
+    setInterval(refreshAll, 30000);
+    setInterval(refreshPredictionFeed, 10000);
+  </script>
 </body>
 </html>

@@ -5,7 +5,16 @@ stages:
       - src/data_ingestion.py
       - params.yaml
     outs:
-      - data/raw
+      - data/raw:
+          cache: true
+      - data/simulation:
+          cache: true
+    params:
+      - data.train_start
+      - data.train_end
+      - data.sim_start
+      - data.sim_end
+      - data.train_tickers
 
   featurize:
     cmd: python src/feature_engineering.py
@@ -14,22 +23,53 @@ stages:
       - data/raw
       - params.yaml
     outs:
-      - data/processed
+      - data/processed:
+          cache: true
+      - data/baselines/feature_baselines.json:
+          cache: false
+    params:
+      - features.short_window
+      - features.mid_window
+      - features.rsi_period
+      - features.hurst_window
 
   train:
-    cmd: python src/train.py
+    cmd: python src/train.py --force
     deps:
       - src/train.py
       - data/processed
       - params.yaml
     outs:
-      - models
+      - models:
+          cache: true
+    params:
+      - training.trend_model
+      - training.vol_model
+      - training.bull_bear_model
+      - training.val_split_date
+      - training.test_split_date
 
-  simulate:
-    cmd: python src/simulate_live.py
+  evaluate:
+    cmd: python src/save_dvc_metrics.py
     deps:
-      - src/simulate_live.py
+      - src/save_dvc_metrics.py
       - models
-      - params.yaml
-    outs:
-      - data/simulation/prediction_log.csv
+    metrics:
+      - dvc_metrics.json:
+          cache: false
+    plots:
+      - dvc_plots/confusion_matrix_trend.csv:
+          cache: false
+          x: actual
+          y: predicted
+          title: 'Trend Regime Confusion Matrix'
+      - dvc_plots/confusion_matrix_vol.csv:
+          cache: false
+          x: actual
+          y: predicted
+          title: 'Volatility Regime Confusion Matrix'
+      - dvc_plots/confusion_matrix_bull_bear.csv:
+          cache: false
+          x: actual
+          y: predicted
+          title: 'Bull/Bear Regime Confusion Matrix'

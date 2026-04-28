@@ -3,196 +3,644 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Market Regime Detection</title>
+  <title>Market Regime Monitor</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #07111f;
-      --panel: rgba(12, 24, 41, 0.88);
-      --panel-border: rgba(126, 177, 255, 0.18);
-      --text: #e8eef9;
-      --muted: #93a4bb;
-      --accent: #79d2c7;
-      --accent-strong: #f6c667;
-      --danger: #ff7a90;
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-alt: #0f1520;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #1f6feb;
+      --green: #3fb950;
+      --red: #f85149;
+      --orange: #d29922;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
     }
 
     * { box-sizing: border-box; }
 
+    html, body { min-height: 100%; }
+
     body {
       margin: 0;
-      min-height: 100vh;
-      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(121, 210, 199, 0.16), transparent 30%),
-        radial-gradient(circle at bottom right, rgba(246, 198, 103, 0.14), transparent 24%),
-        linear-gradient(180deg, #08111f 0%, #050a13 100%);
-      display: grid;
-      place-items: center;
-      padding: 32px;
+        radial-gradient(circle at top left, rgba(31, 111, 235, 0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(63, 185, 80, 0.12), transparent 26%),
+        linear-gradient(180deg, #0a0f17 0%, var(--bg) 100%);
+      color: var(--text);
     }
 
-    .shell {
-      width: min(1120px, 100%);
+    a { color: inherit; text-decoration: none; }
+
+    .app {
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 40px;
       display: grid;
-      gap: 24px;
-      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
     }
 
-    .hero, .panel {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 24px;
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(22, 27, 34, 0.88);
+      box-shadow: var(--shadow);
       backdrop-filter: blur(18px);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 42px; height: 42px; border-radius: 14px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(31,111,235,0.3), rgba(63,185,80,0.16));
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 1.2rem;
+    }
+    .brand-title { margin: 0; font-size: 1.02rem; }
+    .brand-sub { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
+
+    .nav-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .nav-links a {
+      padding: 9px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+    }
+    .nav-links a.active { color: var(--text); border-color: rgba(31,111,235,0.5); background: rgba(31,111,235,0.12); }
+
+    .header {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 20px;
+    }
+
+    .hero, .control-panel, .card, .chart-panel, .manual, .error-banner {
+      background: rgba(22, 27, 34, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
     }
 
     .hero {
-      padding: 40px;
+      padding: 26px;
       display: grid;
-      gap: 24px;
+      gap: 18px;
+      align-content: start;
+      min-height: 220px;
     }
 
-    .eyebrow {
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--accent);
-      font-size: 0.78rem;
-      margin: 0;
-    }
+    .hero-top { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+    .title-block h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.4rem); line-height: 0.95; }
+    .title-block p { margin: 10px 0 0; color: var(--muted); max-width: 64ch; line-height: 1.65; }
 
-    h1 {
-      margin: 0;
-      font-size: clamp(2.5rem, 5vw, 4.8rem);
-      line-height: 0.95;
-      max-width: 10ch;
-    }
-
-    .lede {
-      margin: 0;
-      max-width: 62ch;
+    .health-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      white-space: nowrap;
       color: var(--muted);
-      font-size: 1.02rem;
-      line-height: 1.7;
+    }
+    .health-dot {
+      width: 11px; height: 11px; border-radius: 50%; background: #6e7681;
+      box-shadow: 0 0 0 5px rgba(110,118,129,0.12);
+    }
+    .health-dot.ok { background: var(--green); box-shadow: 0 0 0 5px rgba(63,185,80,0.14); }
+    .health-dot.bad { background: var(--red); box-shadow: 0 0 0 5px rgba(248,81,73,0.14); }
+
+    .control-panel {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
     }
 
-    .metrics {
+    .control-row { display: grid; gap: 12px; }
+    label { color: var(--muted); font-size: 0.84rem; }
+    select, input {
+      width: 100%;
+      background: var(--panel-alt);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 13px 14px;
+      outline: none;
+    }
+    select:focus, input:focus { border-color: rgba(31,111,235,0.7); box-shadow: 0 0 0 3px rgba(31,111,235,0.15); }
+
+    .button-primary {
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      padding: 15px 16px;
+      font-weight: 800;
+      font-size: 1rem;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), #58a6ff);
+      box-shadow: 0 16px 36px rgba(31,111,235,0.28);
+      cursor: pointer;
+    }
+    .button-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .last-updated { color: var(--muted); font-size: 0.88rem; }
+
+    .status-strip {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
     }
+    .stat {
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .stat span { display: block; color: var(--muted); font-size: 0.8rem; margin-bottom: 8px; }
+    .stat strong { font-size: 1.15rem; }
 
-    .metric {
-      padding: 18px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+    .error-banner {
+      display: none;
+      padding: 14px 18px;
+      border-color: rgba(248,81,73,0.4);
+      background: rgba(248,81,73,0.1);
+      color: #ffb4b1;
     }
 
-    .metric span {
-      display: block;
-      color: var(--muted);
-      font-size: 0.82rem;
-      margin-bottom: 6px;
-    }
-
-    .metric strong {
-      font-size: 1.5rem;
-    }
-
-    .panel {
-      padding: 28px;
+    .cards {
       display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px;
-      align-content: start;
     }
 
-    .status {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 18px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .pill {
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      background: rgba(121, 210, 199, 0.14);
-      color: var(--accent);
-      white-space: nowrap;
-    }
-
-    .actions {
+    .card {
+      min-height: 280px;
+      padding: 22px;
       display: grid;
-      gap: 12px;
+      gap: 16px;
+      align-content: start;
+      position: relative;
+      overflow: hidden;
     }
 
-    button {
-      border: 0;
-      border-radius: 14px;
-      padding: 14px 16px;
-      font: inherit;
-      cursor: pointer;
-      color: #04111f;
-      background: linear-gradient(135deg, var(--accent), #b8f3ec);
+    .card-header { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .card-header h2 { margin: 0; font-size: 1.15rem; }
+    .card-header p { margin: 5px 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+
+    .tooltip {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
       font-weight: 700;
+      flex: 0 0 auto;
     }
 
-    .secondary {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 58px;
+      padding: 10px 18px;
+      border-radius: 16px;
+      font-size: clamp(1rem, 2vw, 1.4rem);
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
-    @media (max-width: 900px) {
-      .shell { grid-template-columns: 1fr; }
-      .metrics { grid-template-columns: 1fr; }
-      .hero { padding: 28px; }
+    .badge.green { background: rgba(63,185,80,0.16); color: #7ee787; border-color: rgba(63,185,80,0.35); }
+    .badge.red { background: rgba(248,81,73,0.16); color: #ff9590; border-color: rgba(248,81,73,0.35); }
+    .badge.orange { background: rgba(210,153,34,0.16); color: #f1c464; border-color: rgba(210,153,34,0.35); }
+    .badge.neutral { color: #c9d1d9; }
+
+    .progress-wrap { display: grid; gap: 7px; }
+    .progress-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.84rem; }
+    .progress {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), #68e4ff);
+      transition: width 180ms ease;
+    }
+
+    .card-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 0.85rem; }
+    .loading {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(13,17,23,0.55);
+      backdrop-filter: blur(4px);
+      flex-direction: column;
+      gap: 12px;
+      z-index: 2;
+    }
+    .spinner {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.14);
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .chart-panel {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .chart-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .chart-head h3, .manual h3 { margin: 0; }
+    .chart-head p { margin: 4px 0 0; color: var(--muted); font-size: 0.88rem; }
+    canvas {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+    }
+
+    .manual {
+      padding: 18px 22px;
+    }
+    .manual summary {
+      cursor: pointer;
+      font-weight: 700;
+      list-style: none;
+    }
+    .manual summary::-webkit-details-marker { display: none; }
+    .manual p, .manual li { color: var(--muted); line-height: 1.7; }
+
+    .grid-bottom {
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 1120px) {
+      .header, .grid-bottom, .cards { grid-template-columns: 1fr; }
+      .status-strip { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <section class="hero">
-      <p class="eyebrow">Market Regime Detection</p>
-      <h1>Live regime intelligence for systematic trading.</h1>
-      <p class="lede">
-        Monitor trend, volatility, and bull-bear state changes with a compact operator console designed for model validation, live simulation, and drift-aware retraining.
-      </p>
-
-      <div class="metrics">
-        <div class="metric"><span>Prediction latency</span><strong>&lt; 200 ms</strong></div>
-        <div class="metric"><span>Drift threshold</span><strong>0.15</strong></div>
-        <div class="metric"><span>Retraining gate</span><strong>100+</strong></div>
+  <div class="app">
+    <nav class="nav">
+      <div class="nav-left">
+        <div class="brand-icon">📊</div>
+        <div>
+          <p class="brand-title">Market Regime Monitor</p>
+          <p class="brand-sub">Real-Time Market State Classification</p>
+        </div>
       </div>
+      <div class="nav-links">
+        <a class="active" href="/">🏠 Predictions</a>
+        <a href="/pipeline">⚙️ Pipeline</a>
+      </div>
+    </nav>
+
+    <section class="header">
+      <div class="hero">
+        <div class="hero-top">
+          <div class="title-block">
+            <h1>Real-time regime intelligence for systematic trading.</h1>
+            <p>
+              Classify trend, volatility, and market direction from one clean operational console. The interface is designed for fast checks during live simulation, model review, and market monitoring.
+            </p>
+          </div>
+          <div class="health-pill"><span id="healthDot" class="health-dot"></span><span id="healthText">Checking service health...</span></div>
+        </div>
+        <div class="status-strip">
+          <div class="stat"><span>API</span><strong id="apiStatus">Waiting for response</strong></div>
+          <div class="stat"><span>Last analyzed</span><strong id="lastAnalyzed">Never</strong></div>
+          <div class="stat"><span>History points</span><strong id="historyCount">0</strong></div>
+        </div>
+      </div>
+
+      <aside class="control-panel">
+        <div class="control-row">
+          <label for="tickerSelect">Ticker preset</label>
+          <select id="tickerSelect">
+            <option value="SPY">SPY</option>
+            <option value="QQQ">QQQ</option>
+            <option value="AAPL">AAPL</option>
+            <option value="MSFT">MSFT</option>
+            <option value="GOOGL">GOOGL</option>
+            <option value="NVDA">NVDA</option>
+            <option value="AMZN">AMZN</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <label for="customTicker">Custom ticker</label>
+          <input id="customTicker" type="text" placeholder="Type a ticker or leave blank" />
+        </div>
+        <div class="control-row">
+          <label for="asOfDate">As of date</label>
+          <input id="asOfDate" type="date" />
+        </div>
+        <button id="analyzeButton" class="button-primary" type="button">Analyze</button>
+        <div class="last-updated">Last analyzed timestamp: <span id="timestampDisplay">-</span></div>
+      </aside>
     </section>
 
-    <aside class="panel">
-      <div class="status">
-        <div>
-          <p class="eyebrow" style="margin-bottom: 6px;">System health</p>
-          <strong>Operational</strong>
-        </div>
-        <div class="pill">API connected</div>
-      </div>
-      <div class="status">
-        <div>
-          <p class="eyebrow" style="margin-bottom: 6px; color: var(--accent-strong);">Current regime</p>
-          <strong>Awaiting live signal</strong>
-        </div>
-        <div class="pill" style="background: rgba(246, 198, 103, 0.14); color: var(--accent-strong);">Model ready</div>
-      </div>
+    <div id="errorBanner" class="error-banner">⚠️ API unavailable. Make sure docker-compose up is running.</div>
 
-      <div class="actions">
-        <button type="button">Request prediction</button>
-        <button type="button" class="secondary">Open pipeline view</button>
-      </div>
-    </aside>
-  </main>
+    <section class="cards">
+      <article class="card" id="trendCard">
+        <div class="loading"><div class="spinner"></div><div>Analyzing...</div></div>
+        <div class="card-header">
+          <div>
+            <h2>📈 Trend Regime</h2>
+            <p>The market is showing persistent directional momentum.</p>
+          </div>
+          <div class="tooltip" title="The market is showing persistent directional momentum.">i</div>
+        </div>
+        <div class="badge neutral" id="trendLabel">Awaiting analysis</div>
+        <div class="progress-wrap">
+          <div class="progress-meta"><span>Confidence</span><span id="trendConfidence">0%</span></div>
+          <div class="progress"><div id="trendBar" class="progress-bar"></div></div>
+        </div>
+        <div class="card-footer"><span>As of: <strong id="trendDate">-</strong></span><span id="trendMeta">No prediction yet</span></div>
+      </article>
+
+      <article class="card" id="volCard">
+        <div class="loading"><div class="spinner"></div><div>Analyzing...</div></div>
+        <div class="card-header">
+          <div>
+            <h2>🌊 Volatility</h2>
+            <p>Elevated risk means wider daily swings and more uncertainty.</p>
+          </div>
+          <div class="tooltip" title="Elevated risk means wider daily swings and more uncertainty.">i</div>
+        </div>
+        <div class="badge neutral" id="volLabel">Awaiting analysis</div>
+        <div class="progress-wrap">
+          <div class="progress-meta"><span>Confidence</span><span id="volConfidence">0%</span></div>
+          <div class="progress"><div id="volBar" class="progress-bar"></div></div>
+        </div>
+        <div class="card-footer"><span>As of: <strong id="volDate">-</strong></span><span id="volMeta">No prediction yet</span></div>
+      </article>
+
+      <article class="card" id="bull_bearCard">
+        <div class="loading"><div class="spinner"></div><div>Analyzing...</div></div>
+        <div class="card-header">
+          <div>
+            <h2>🐂 Market Direction</h2>
+            <p>Uptrend or downtrend across the broader market structure.</p>
+          </div>
+          <div class="tooltip" title="Uptrend or downtrend across the broader market structure.">i</div>
+        </div>
+        <div class="badge neutral" id="bull_bearLabel">Awaiting analysis</div>
+        <div class="progress-wrap">
+          <div class="progress-meta"><span>Confidence</span><span id="bull_bearConfidence">0%</span></div>
+          <div class="progress"><div id="bull_bearBar" class="progress-bar"></div></div>
+        </div>
+        <div class="card-footer"><span>As of: <strong id="bull_bearDate">-</strong></span><span id="bull_bearMeta">No prediction yet</span></div>
+      </article>
+    </section>
+
+    <div class="grid-bottom">
+      <section class="chart-panel">
+        <div class="chart-head">
+          <div>
+            <h3>Regime History</h3>
+            <p>Last prediction snapshots from the simulation log.</p>
+          </div>
+          <div class="pill" style="border:1px solid rgba(63,185,80,0.3); background: rgba(63,185,80,0.12); color: #7ee787;">Canvas timeline</div>
+        </div>
+        <canvas id="historyCanvas" width="1200" height="220"></canvas>
+      </section>
+
+      <details class="manual">
+        <summary>User Manual</summary>
+        <div style="margin-top: 12px;">
+          <h3>How to use this screen</h3>
+          <p>Choose a ticker, optionally select a date, and click Analyze. The system will classify the market into three regimes and show a confidence score for each one.</p>
+          <h3>What the regimes mean</h3>
+          <ul>
+            <li><strong>Trending:</strong> the market is moving in one direction with persistence.</li>
+            <li><strong>MeanReverting:</strong> price is oscillating and moving back toward an average.</li>
+            <li><strong>HighVol:</strong> the market is noisy and risk is elevated.</li>
+            <li><strong>LowVol:</strong> the market is calm and normal position sizing is suitable.</li>
+            <li><strong>Bull:</strong> broad risk-on conditions are present.</li>
+            <li><strong>Bear:</strong> broad risk-off conditions are present.</li>
+          </ul>
+          <p>If the API shows an error, check that the Docker stack is running. If a regime looks weak, use the pipeline screen to inspect drift and retraining status.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:8000';
+    const HEALTH_INTERVAL_MS = 30000;
+    const HISTORY_LIMIT = 80;
+
+    // Resolves the effective ticker from either the preset or the custom input.
+    function getSelectedTicker() {
+      const custom = document.getElementById('customTicker').value.trim();
+      return custom || document.getElementById('tickerSelect').value;
+    }
+
+    // Maps a predicted label to a display color class used by the badge and timeline.
+    function labelClass(label) {
+      const normalized = String(label || '').toLowerCase();
+      if (normalized.includes('bull') || normalized.includes('trend') || normalized.includes('lowvol')) return 'green';
+      if (normalized.includes('bear') || normalized.includes('highvol') || normalized.includes('mean')) return 'red';
+      return 'orange';
+    }
+
+    // Converts a label into a plain-English explanation shown under each card.
+    function labelExplanation(regime, label) {
+      const normalized = String(label || '').toLowerCase();
+      if (regime === 'trend') {
+        return normalized.includes('trend') ? 'Directional momentum is dominant.' : 'Market is oscillating around fair value.';
+      }
+      if (regime === 'vol') {
+        return normalized.includes('high') ? 'Risk is elevated.' : 'Market conditions are relatively calm.';
+      }
+      return normalized.includes('bull') ? 'Risk-on regime.' : 'Risk-off regime.';
+    }
+
+    // Displays an error banner with a human-readable API failure message.
+    function showError(message) {
+      const banner = document.getElementById('errorBanner');
+      banner.textContent = message || '⚠️ API unavailable. Make sure docker-compose up is running.';
+      banner.style.display = 'block';
+    }
+
+    // Hides the error banner when the API becomes reachable again.
+    function hideError() {
+      document.getElementById('errorBanner').style.display = 'none';
+    }
+
+    // Toggles the loading overlay across all prediction cards.
+    function showLoading() {
+      document.querySelectorAll('.card .loading').forEach((node) => {
+        node.style.display = 'flex';
+      });
+      document.getElementById('analyzeButton').disabled = true;
+    }
+
+    // Turns off all loading indicators after an analysis round completes.
+    function hideLoading() {
+      document.querySelectorAll('.card .loading').forEach((node) => {
+        node.style.display = 'none';
+      });
+      document.getElementById('analyzeButton').disabled = false;
+    }
+
+    // Updates one card with the model output for a specific regime.
+    function updateCard(regime, result) {
+      const labelNode = document.getElementById(`${regime}Label`);
+      const barNode = document.getElementById(`${regime}Bar`);
+      const confidenceNode = document.getElementById(`${regime}Confidence`);
+      const dateNode = document.getElementById(`${regime}Date`);
+      const metaNode = document.getElementById(`${regime}Meta`);
+
+      const confidence = Math.max(0, Math.min(1, Number(result.confidence || 0)));
+      const percent = Math.round(confidence * 100);
+      const badgeClass = labelClass(result.predicted_label);
+
+      labelNode.textContent = String(result.predicted_label || 'Unknown').toUpperCase();
+      labelNode.className = `badge ${badgeClass}`;
+      barNode.style.width = `${percent}%`;
+      confidenceNode.textContent = `${percent}%`;
+      dateNode.textContent = result.inference_date || result.as_of_date || '-';
+      metaNode.textContent = `${labelExplanation(regime, result.predicted_label)} • ${Number(result.inference_latency_ms || 0).toFixed(1)} ms`;
+    }
+
+    // Redraws the regime history timeline on the canvas using the prediction log rows.
+    function renderHistory(rows) {
+      const canvas = document.getElementById('historyCanvas');
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#0d1117';
+      ctx.fillRect(0, 0, width, height);
+
+      if (!rows || rows.length === 0) {
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '18px system-ui, sans-serif';
+        ctx.fillText('No prediction history yet.', 24, 56);
+        return;
+      }
+
+      const barWidth = Math.max(6, Math.floor((width - 40) / rows.length));
+      const chartTop = 34;
+      const chartHeight = 120;
+
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '14px system-ui, sans-serif';
+      ctx.fillText('Green = bullish/trending/low vol    Red = bearish/high vol/mean reverting    Orange = neutral', 24, 22);
+
+      rows.slice(-Math.floor((width - 40) / barWidth)).forEach((row, index) => {
+        const x = 20 + index * barWidth;
+        const regimeLabel = String(row.predicted_label || '');
+        const fill = labelClass(regimeLabel) === 'green' ? '#3fb950' : labelClass(regimeLabel) === 'red' ? '#f85149' : '#d29922';
+        const value = row.regime_type === 'vol' ? (regimeLabel.toLowerCase().includes('high') ? 1 : 0.35) : (regimeLabel.toLowerCase().includes('bear') || regimeLabel.toLowerCase().includes('mean') ? 0.35 : 1);
+        const barHeight = Math.max(18, chartHeight * value);
+        ctx.fillStyle = fill;
+        ctx.fillRect(x, chartTop + chartHeight - barHeight, barWidth - 2, barHeight);
+      });
+    }
+
+    // Refreshes the timeline from the API and updates the on-page counter.
+    async function loadHistory() {
+      try {
+        const response = await fetch(`${API_URL}/prediction-history?limit=${HISTORY_LIMIT}`);
+        if (!response.ok) throw new Error('history unavailable');
+        const payload = await response.json();
+        document.getElementById('historyCount').textContent = payload.count || 0;
+        renderHistory(payload.rows || []);
+      } catch (error) {
+        renderHistory([]);
+      }
+    }
+
+    // Checks the API health and updates the header status indicator.
+    async function checkHealth() {
+      try {
+        const response = await fetch(`${API_URL}/health`);
+        if (!response.ok) throw new Error('service unreachable');
+        const data = await response.json();
+        const healthy = data.status === 'ok' || data.status === 'degraded';
+        const dot = document.getElementById('healthDot');
+        const text = document.getElementById('healthText');
+        const apiStatus = document.getElementById('apiStatus');
+
+        dot.className = healthy ? 'health-dot ok' : 'health-dot bad';
+        text.textContent = healthy ? `Healthy (${data.status})` : 'Service degraded';
+        apiStatus.textContent = `${data.status.toUpperCase()} • ${data.uptime_seconds.toFixed(0)}s uptime`;
+        hideError();
+      } catch (error) {
+        document.getElementById('healthDot').className = 'health-dot bad';
+        document.getElementById('healthText').textContent = 'API unavailable';
+        document.getElementById('apiStatus').textContent = 'Offline';
+        showError('⚠️ API unavailable. Make sure docker-compose up is running.');
+      }
+    }
+
+    // Calls the prediction endpoint and paints all three regime cards with the response.
+    async function analyzeRegimes() {
+      const ticker = getSelectedTicker();
+      const asOfDate = document.getElementById('asOfDate').value || null;
+      showLoading();
+      hideError();
+
+      try {
+        const response = await fetch(`${API_URL}/predict`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticker, as_of_date: asOfDate, regime_types: ['trend', 'vol', 'bull_bear'] })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Prediction failed with HTTP ${response.status}`);
+        }
+
+        const payload = await response.json();
+        Object.entries(payload.results || {}).forEach(([regime, result]) => updateCard(regime, result));
+        const now = new Date();
+        document.getElementById('timestampDisplay').textContent = now.toLocaleString();
+        document.getElementById('lastAnalyzed').textContent = now.toLocaleString();
+        await loadHistory();
+      } catch (error) {
+        showError('⚠️ API unavailable. Make sure docker-compose up is running.');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    document.getElementById('analyzeButton').addEventListener('click', analyzeRegimes);
+    checkHealth();
+    loadHistory();
+    setInterval(checkHealth, HEALTH_INTERVAL_MS);
+    setInterval(loadHistory, 30000);
+  </script>
 </body>
 </html>
