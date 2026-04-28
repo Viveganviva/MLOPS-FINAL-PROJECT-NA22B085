@@ -1,4 +1,3 @@
-```markdown
 # Market Regime Detection — MLOps Final Project
 
 > **NA22B085** · End-to-end MLOps pipeline for next-day market regime classification using daily equity data, served through a fully containerised stack with experiment tracking, monitoring, drift detection, and automated retraining.
