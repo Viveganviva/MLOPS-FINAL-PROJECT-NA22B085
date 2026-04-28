@@ -234,6 +234,8 @@ def download_ticker(ticker: str, start: str, end: str, save_path: Path | str) ->
             frame = yf.download(ticker, start=start, end=end, progress=False, auto_adjust=False, actions=False)
             if isinstance(frame.columns, pd.MultiIndex):
                 frame.columns = frame.columns.get_level_values(0)
+            # Also drop any duplicate columns that can appear after flattening
+            frame = frame.loc[:, ~frame.columns.duplicated()]
 
             if frame.empty:
                 raise ValueError(f"downloaded frame for {ticker} is empty")

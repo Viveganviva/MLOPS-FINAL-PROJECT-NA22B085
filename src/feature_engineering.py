@@ -436,6 +436,12 @@ def _finalize_feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
 def build_trend_features(spy_df: pd.DataFrame) -> pd.DataFrame:
     """Build trend-regime features from SPY OHLCV data."""
 
+    # Normalize column names — handles both flat and MultiIndex yfinance output
+    if isinstance(spy_df.columns, pd.MultiIndex):
+        spy_df = spy_df.copy()
+        spy_df.columns = spy_df.columns.get_level_values(0)
+        spy_df = spy_df.loc[:, ~spy_df.columns.duplicated()]
+
     # The label uses Hurst/VR/autocorr, so these values are intentionally excluded from the feature set to avoid leakage.
     frame = label_trend_regime(spy_df)
 
@@ -478,6 +484,16 @@ def build_trend_features(spy_df: pd.DataFrame) -> pd.DataFrame:
 
 def build_vol_features(spy_df: pd.DataFrame, vix_df: pd.DataFrame) -> pd.DataFrame:
     """Build volatility-regime features from SPY and VIX market data."""
+
+    # Normalize column names — handles both flat and MultiIndex yfinance output
+    if isinstance(spy_df.columns, pd.MultiIndex):
+        spy_df = spy_df.copy()
+        spy_df.columns = spy_df.columns.get_level_values(0)
+        spy_df = spy_df.loc[:, ~spy_df.columns.duplicated()]
+    if isinstance(vix_df.columns, pd.MultiIndex):
+        vix_df = vix_df.copy()
+        vix_df.columns = vix_df.columns.get_level_values(0)
+        vix_df = vix_df.loc[:, ~vix_df.columns.duplicated()]
 
     frame = label_vol_regime(spy_df, vix_df)
 
@@ -537,6 +553,32 @@ def _cross_asset_frame(spy_df: pd.DataFrame, qqq_df: pd.DataFrame, iwm_df: pd.Da
 
 def build_bull_bear_features(spy_df: pd.DataFrame, qqq_df: pd.DataFrame, iwm_df: pd.DataFrame, gld_df: pd.DataFrame, tlt_df: pd.DataFrame, vix_df: pd.DataFrame) -> pd.DataFrame:
     """Build bull/bear features using SPY plus cross-asset confirmation signals."""
+
+    # Normalize column names — handles both flat and MultiIndex yfinance output
+    if isinstance(spy_df.columns, pd.MultiIndex):
+        spy_df = spy_df.copy()
+        spy_df.columns = spy_df.columns.get_level_values(0)
+        spy_df = spy_df.loc[:, ~spy_df.columns.duplicated()]
+    if isinstance(qqq_df.columns, pd.MultiIndex):
+        qqq_df = qqq_df.copy()
+        qqq_df.columns = qqq_df.columns.get_level_values(0)
+        qqq_df = qqq_df.loc[:, ~qqq_df.columns.duplicated()]
+    if isinstance(iwm_df.columns, pd.MultiIndex):
+        iwm_df = iwm_df.copy()
+        iwm_df.columns = iwm_df.columns.get_level_values(0)
+        iwm_df = iwm_df.loc[:, ~iwm_df.columns.duplicated()]
+    if isinstance(gld_df.columns, pd.MultiIndex):
+        gld_df = gld_df.copy()
+        gld_df.columns = gld_df.columns.get_level_values(0)
+        gld_df = gld_df.loc[:, ~gld_df.columns.duplicated()]
+    if isinstance(tlt_df.columns, pd.MultiIndex):
+        tlt_df = tlt_df.copy()
+        tlt_df.columns = tlt_df.columns.get_level_values(0)
+        tlt_df = tlt_df.loc[:, ~tlt_df.columns.duplicated()]
+    if isinstance(vix_df.columns, pd.MultiIndex):
+        vix_df = vix_df.copy()
+        vix_df.columns = vix_df.columns.get_level_values(0)
+        vix_df = vix_df.loc[:, ~vix_df.columns.duplicated()]
 
     # Removed due to data leakage with SMA-based labels in experiment phase; using Method B labels instead.
     frame = label_bull_bear_regime(spy_df)

@@ -141,6 +141,12 @@ def fetch_recent_data(ticker: str, lookback_days: int = 300, regime_type: str | 
     frames: dict[str, pd.DataFrame] = {}
     for symbol in tickers:
         data = yf.download(symbol, start=start, end=end, progress=False, auto_adjust=False, actions=False)
+        # yfinance >= 0.2.18 returns MultiIndex columns like ('Close', 'SPY')
+        # when downloading even a single ticker. Flatten them to simple names.
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.get_level_values(0)
+        # Also drop any duplicate columns that can appear after flattening
+        data = data.loc[:, ~data.columns.duplicated()]
         data = _flatten_columns(data)
         if data.empty:
             raise ValueError(f"No data returned for {symbol}")

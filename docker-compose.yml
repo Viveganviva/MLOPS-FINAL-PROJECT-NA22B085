@@ -17,13 +17,13 @@ services:
       - ./logs:/app/logs
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - ALERT_EMAIL_ENABLED=false          # Set to true to enable email alerts
-      - ALERT_EMAIL_TO=your@email.com      # Recipient address
-      - ALERT_EMAIL_FROM=alerts@regime.app
+      - ALERT_EMAIL_ENABLED=true          # Set to true (false) to enable email alerts
+      - ALERT_EMAIL_TO=${SMTP_USER}      # Recipient address
+      - ALERT_EMAIL_FROM=${SMTP_USER}
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
-      - SMTP_USER=                         # Fill in manually - never hardcode
-      - SMTP_PASSWORD=                     # Fill in manually - never hardcode
+      - SMTP_USER=${SMTP_USER}                         # Fill in manually - never hardcode
+      - SMTP_PASSWORD=${SMTP_PASSWORD}                     # Fill in manually - never hardcode
       # Never commit SMTP_USER or SMTP_PASSWORD to git. Fill them in docker-compose.yml locally or use a .env file that is gitignored.
     depends_on:
       mlflow:
@@ -102,7 +102,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__WEBSERVER__SECRET_KEY=regime_detection_secret_key_2024
@@ -114,8 +114,13 @@ services:
     command: >
       bash -c "
         airflow db migrate &&
-        airflow users create --username admin --password admin
-          --firstname Admin --lastname User --role Admin --email admin@example.com 2>/dev/null || true &&
+        airflow users create
+          --username admin
+          --password admin
+          --firstname Admin
+          --lastname User
+          --role Admin
+          --email admin@example.com 2>/dev/null || true &&
         airflow webserver --port 8080 &
         airflow scheduler
       "

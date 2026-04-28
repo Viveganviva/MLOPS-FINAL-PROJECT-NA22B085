@@ -466,7 +466,12 @@
   </div>
 
   <script>
-    const API_URL = 'http://localhost:8000';
+    // API URL — change this if your API runs on a different host or port
+    // For local Docker: http://localhost:8000
+    // For demo on same machine: http://localhost:8000
+    const API_URL = window.location.hostname === 'localhost'
+      ? 'http://localhost:8000'
+      : `http://${window.location.hostname}:8000`;
     const HEALTH_INTERVAL_MS = 30000;
     const HISTORY_LIMIT = 80;
 
